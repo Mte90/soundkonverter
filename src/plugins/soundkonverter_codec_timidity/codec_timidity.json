@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Timidity",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

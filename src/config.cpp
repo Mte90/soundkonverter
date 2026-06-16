@@ -3,12 +3,15 @@
 #include "logger.h"
 #include "global.h"
 
-#include <KConfigGroup>
+#include <QRegularExpression>
+#include <QElapsedTimer>
+#include <QSettings>
+#include <KLocalizedString>
 #include <QDir>
+#include <QFileInfo>
 #include <QDomElement>
-#include <QTime>
 #include <solid/device.h>
-#include <KStandardDirs>
+#include <QStandardPaths>
 
 
 Config::Config( Logger *_logger, QObject *parent )
@@ -30,36 +33,35 @@ Config::~Config()
 
 void Config::load()
 {
-    QTime time;
+    QElapsedTimer time;
     time.start();
 
     QStringList formats;
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
+    QSettings settings("soundkonverterrc", QSettings::IniFormat);
 
-    group = conf->group( "General" );
-    data.app.configVersion = group.readEntry( "configVersion", 0 );
-    data.general.startTab = group.readEntry( "startTab", 0 );
-    data.general.lastTab = group.readEntry( "lastTab", 0 );
-    data.general.defaultProfile = group.readEntry( "defaultProfile", i18n("Last used") );
-    data.general.lastProfile = group.readEntry( "lastProfile", i18n("High") );
-    data.general.defaultFormat = group.readEntry( "defaultFormat", i18n("Last used") );
-    data.general.lastFormat = group.readEntry( "lastFormat", "ogg vorbis" );
-    data.general.lastOutputDirectoryMode = group.readEntry( "lastOutputDirectoryMode", 0 );
-    data.general.specifyOutputDirectory = group.readEntry( "specifyOutputDirectory", QDir::homePath() + "/soundKonverter" );
-    data.general.metaDataOutputDirectory = group.readEntry( "metaDataOutputDirectory", QDir::homePath() + "/soundKonverter/%b/%d - %n - %a - %t" );
-    data.general.copyStructureOutputDirectory = group.readEntry( "copyStructureOutputDirectory", QDir::homePath() + "/soundKonverter" );
-    data.general.lastMetaDataOutputDirectoryPaths = group.readEntry( "lastMetaDataOutputDirectoryPaths", QStringList() );
-    data.general.lastNormalOutputDirectoryPaths = group.readEntry( "lastNormalOutputDirectoryPaths", QStringList() );
-    data.general.waitForAlbumGain = group.readEntry( "waitForAlbumGain", true );
-    data.general.useVFATNames = group.readEntry( "useVFATNames", false );
-    data.general.copyIfSameCodec = group.readEntry( "copyIfSameCodec", false );
-    data.general.writeLogFiles = group.readEntry( "writeLogFiles", false );
-    data.general.conflictHandling = (Config::Data::General::ConflictHandling)group.readEntry( "conflictHandling", 0 );
-//     data.general.priority = group.readEntry( "priority", 10 );
-    data.general.numFiles = group.readEntry( "numFiles", 0 );
-    data.general.numReplayGainFiles = group.readEntry( "numReplayGainFiles", 0 );
+    settings.beginGroup("General");
+    data.app.configVersion = settings.value( "configVersion", 0 ).toInt();
+    data.general.startTab = settings.value( "startTab", 0 ).toInt();
+    data.general.lastTab = settings.value( "lastTab", 0 ).toInt();
+    data.general.defaultProfile = settings.value( "defaultProfile", i18n("Last used") ).toString();
+    data.general.lastProfile = settings.value( "lastProfile", i18n("High") ).toString();
+    data.general.defaultFormat = settings.value( "defaultFormat", i18n("Last used") ).toString();
+    data.general.lastFormat = settings.value( "lastFormat", "ogg vorbis" ).toString();
+    data.general.lastOutputDirectoryMode = settings.value( "lastOutputDirectoryMode", 0 ).toInt();
+    data.general.specifyOutputDirectory = settings.value( "specifyOutputDirectory", QDir::homePath() + "/soundKonverter" ).toString();
+    data.general.metaDataOutputDirectory = settings.value( "metaDataOutputDirectory", QDir::homePath() + "/soundKonverter/%b/%d - %n - %a - %t" ).toString();
+    data.general.copyStructureOutputDirectory = settings.value( "copyStructureOutputDirectory", QDir::homePath() + "/soundKonverter" ).toString();
+    data.general.lastMetaDataOutputDirectoryPaths = settings.value( "lastMetaDataOutputDirectoryPaths", QStringList() ).toStringList();
+    data.general.lastNormalOutputDirectoryPaths = settings.value( "lastNormalOutputDirectoryPaths", QStringList() ).toStringList();
+    data.general.waitForAlbumGain = settings.value( "waitForAlbumGain", true ).toBool();
+    data.general.useVFATNames = settings.value( "useVFATNames", false ).toBool();
+    data.general.copyIfSameCodec = settings.value( "copyIfSameCodec", false ).toBool();
+    data.general.writeLogFiles = settings.value( "writeLogFiles", false ).toBool();
+    data.general.conflictHandling = static_cast<Config::Data::General::ConflictHandling>(settings.value( "conflictHandling", 0 ).toInt());
+//     data.general.priority = settings.value( "priority", 10 );
+    data.general.numFiles = settings.value( "numFiles", 0 ).toInt();
+    data.general.numReplayGainFiles = settings.value( "numReplayGainFiles", 0 ).toInt();
     if( data.general.numFiles == 0 || data.general.numReplayGainFiles == 0 )
     {
         QList<Solid::Device> processors = Solid::Device::listFromType(Solid::DeviceInterface::Processor, QString());
@@ -69,23 +71,23 @@ void Config::load()
         if( data.general.numReplayGainFiles == 0 )
             data.general.numReplayGainFiles = num;
     }
-//     data.general.executeUserScript = group.readEntry( "executeUserScript", false );
-//     data.general.showToolBar = group.readEntry( "showToolBar", false );
-//     data.general.outputFilePermissions = group.readEntry( "outputFilePermissions", 644 );
-    data.general.actionMenuConvertMimeTypes = group.readEntry( "actionMenuConvertMimeTypes", QStringList() );
-    data.general.actionMenuReplayGainMimeTypes = group.readEntry( "actionMenuReplayGainMimeTypes", QStringList() );
-    data.general.replayGainGrouping = (Config::Data::General::ReplayGainGrouping)group.readEntry( "replayGainGrouping", 0 );
-    data.general.preferredOggVorbisExtension = group.readEntry( "preferredOggVorbisExtension", "ogg" );
-    data.general.preferredVorbisCommentCommentTag = group.readEntry( "preferredVorbisCommentCommentTag", "DESCRIPTION" );
-    data.general.preferredVorbisCommentTrackTotalTag = group.readEntry( "preferredVorbisCommentTrackTotalTag", "TRACKTOTAL" );
-    data.general.preferredVorbisCommentDiscTotalTag = group.readEntry( "preferredVorbisCommentDiscTotalTag", "DISCTOTAL" );
+//     data.general.executeUserScript = settings.value( "executeUserScript", false );
+//     data.general.showToolBar = settings.value( "showToolBar", false );
+//     data.general.outputFilePermissions = settings.value( "outputFilePermissions", 644 );
+    data.general.actionMenuConvertMimeTypes = settings.value( "actionMenuConvertMimeTypes", QStringList() ).toStringList();
+    data.general.actionMenuReplayGainMimeTypes = settings.value( "actionMenuReplayGainMimeTypes", QStringList() ).toStringList();
+    data.general.replayGainGrouping = static_cast<Config::Data::General::ReplayGainGrouping>(settings.value( "replayGainGrouping", 0 ).toInt());
+    data.general.preferredOggVorbisExtension = settings.value( "preferredOggVorbisExtension", "ogg" ).toString();
+    data.general.preferredVorbisCommentCommentTag = settings.value( "preferredVorbisCommentCommentTag", "DESCRIPTION" ).toString();
+    data.general.preferredVorbisCommentTrackTotalTag = settings.value( "preferredVorbisCommentTrackTotalTag", "TRACKTOTAL" ).toString();
+    data.general.preferredVorbisCommentDiscTotalTag = settings.value( "preferredVorbisCommentDiscTotalTag", "DISCTOTAL" ).toString();
 
     // due to a bug lastNormalOutputDirectoryPaths could have more than 5 items
     while( data.general.lastNormalOutputDirectoryPaths.count() > 5 )
         data.general.lastNormalOutputDirectoryPaths.takeLast();
 
-    group = conf->group( "Advanced" );
-    data.advanced.useSharedMemoryForTempFiles = group.readEntry( "useSharedMemoryForTempFiles", false );
+    settings.beginGroup("Advanced");
+    data.advanced.useSharedMemoryForTempFiles = settings.value( "useSharedMemoryForTempFiles", false ).toBool();
     data.advanced.sharedMemorySize = 0;
     if( QFile::exists("/dev/shm") )
     {
@@ -95,37 +97,38 @@ void Config::load()
         {
             QTextStream t( &chkdf );
             QString s = t.readLine();
-            QRegExp rxlen( "^(?:\\S+)(?:\\s+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)" );
-            if( s.contains(rxlen) )
+            QRegularExpression rxlen( "^(?:\\S+)(?:\\s+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)(?:\\s+)(\\d+)" );
+            QRegularExpressionMatch rxmatch = rxlen.match(s);
+            if( rxmatch.hasMatch() )
             {
-                data.advanced.sharedMemorySize = rxlen.cap(1).toInt();
+                data.advanced.sharedMemorySize = rxmatch.captured(1).toInt();
             }
             chkdf.close();
         }
         chkdf.remove();
     }
-    data.advanced.maxSizeForSharedMemoryTempFiles = group.readEntry( "maxSizeForSharedMemoryTempFiles", data.advanced.sharedMemorySize / 4 );
-    data.advanced.usePipes = group.readEntry( "usePipes", false );
-    data.advanced.ejectCdAfterRip = group.readEntry( "ejectCdAfterRip", true );
+    data.advanced.maxSizeForSharedMemoryTempFiles = settings.value( "maxSizeForSharedMemoryTempFiles", data.advanced.sharedMemorySize / 4 ).toInt();
+    data.advanced.usePipes = settings.value( "usePipes", false ).toBool();
+    data.advanced.ejectCdAfterRip = settings.value( "ejectCdAfterRip", true ).toBool();
 
-    group = conf->group( "CoverArt" );
-    data.coverArt.writeCovers = group.readEntry( "writeCovers", 1 );
-    data.coverArt.writeCoverName = group.readEntry( "writeCoverName", 0 );
-    data.coverArt.writeCoverDefaultName = group.readEntry( "writeCoverDefaultName", i18nc("cover file name","cover") );
+    settings.beginGroup("CoverArt");
+    data.coverArt.writeCovers = settings.value( "writeCovers", 1 ).toInt();
+    data.coverArt.writeCoverName = settings.value( "writeCoverName", 0 ).toInt();
+    data.coverArt.writeCoverDefaultName = settings.value( "writeCoverDefaultName", i18nc("cover file name","cover") ).toString();
 
-    group = conf->group( "Backends" );
-    formats = group.readEntry( "formats", QStringList() );
-    foreach( const QString& format, formats )
+    settings.beginGroup("Backends");
+    formats = settings.value( "formats", QStringList() ).toStringList();
+    for(const QString& format : formats)
     {
         CodecData codecData;
         codecData.codecName = format;
-        codecData.encoders = group.readEntry( format + "_encoders", QStringList() );
-        codecData.decoders = group.readEntry( format + "_decoders", QStringList() );
-        codecData.replaygain = group.readEntry( format + "_replaygain", QStringList() );
+        codecData.encoders = settings.value( format + "_encoders", QStringList() ).toStringList();
+        codecData.decoders = settings.value( format + "_decoders", QStringList() ).toStringList();
+        codecData.replaygain = settings.value( format + "_replaygain", QStringList() ).toStringList();
         data.backends.codecs += codecData;
     }
-    data.backends.filters = group.readEntry( "filters", QStringList() );
-    data.backends.enabledFilters = group.readEntry( "enabledFilters", QStringList() );
+    data.backends.filters = settings.value( "filters", QStringList() ).toStringList();
+    data.backends.enabledFilters = settings.value( "enabledFilters", QStringList() ).toStringList();
 
     pPluginLoader->load();
 
@@ -138,7 +141,7 @@ void Config::load()
 
     // build default backend priority list
 
-    foreach( const QString& format, formats )
+    for(const QString& format : formats)
     {
         if( format == "wav" )
             continue;
@@ -166,13 +169,13 @@ void Config::load()
         enabledPlugins.clear();
         newPlugins.clear();
         // register existing enabled plugins as such and list new enabled plugins
-        foreach( const ConversionPipeTrunk& trunk, pPluginLoader->conversionFilterPipeTrunks )
+        for(const ConversionPipeTrunk& trunk : pPluginLoader->conversionFilterPipeTrunks)
         {
             if( trunk.codecTo == format && trunk.enabled )
             {
                 pluginName = trunk.plugin->name();
                 enabledPlugins += pluginName;
-                if( !data.backends.codecs.at(codecIndex).encoders.contains(pluginName) && newPlugins.filter(QRegExp("[0-9]{8,8}"+pluginName)).count()==0 )
+                if( !data.backends.codecs.at(codecIndex).encoders.contains(pluginName) && newPlugins.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count()==0 )
                 {
                     newPlugins += QString::number(trunk.rating).rightJustified(8,'0') + pluginName;
                 }
@@ -198,13 +201,13 @@ void Config::load()
         enabledPlugins.clear();
         newPlugins.clear();
         // register existing enabled plugins as such and list new enabled plugins
-        foreach( const ConversionPipeTrunk& trunk, pPluginLoader->conversionFilterPipeTrunks )
+        for(const ConversionPipeTrunk& trunk : pPluginLoader->conversionFilterPipeTrunks)
         {
             if( trunk.codecFrom == format && trunk.enabled )
             {
                 pluginName = trunk.plugin->name();
                 enabledPlugins += pluginName;
-                if( !data.backends.codecs.at(codecIndex).decoders.contains(pluginName) && newPlugins.filter(QRegExp("[0-9]{8,8}"+pluginName)).count()==0 )
+                if( !data.backends.codecs.at(codecIndex).decoders.contains(pluginName) && newPlugins.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count()==0 )
                 {
                     newPlugins += QString::number(trunk.rating).rightJustified(8,'0') + pluginName;
                 }
@@ -235,13 +238,13 @@ void Config::load()
         }
         newPlugins.clear();
         // register existing enabled plugins as such and list new enabled plugins
-        foreach( const ReplayGainPipe& pipe, pPluginLoader->replaygainPipes )
+        for(const ReplayGainPipe& pipe : pPluginLoader->replaygainPipes)
         {
             if( pipe.codecName == format && pipe.enabled )
             {
                 pluginName = pipe.plugin->name();
                 enabledPlugins += pluginName;
-                if( !data.backends.codecs.at(codecIndex).replaygain.contains(pluginName) && newPlugins.filter(QRegExp("[0-9]{8,8}"+pluginName)).count()==0 )
+                if( !data.backends.codecs.at(codecIndex).replaygain.contains(pluginName) && newPlugins.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count()==0 )
                 {
                     newPlugins += QString::number(pipe.rating).rightJustified(8,'0') + pluginName;
                 }
@@ -273,15 +276,15 @@ void Config::load()
     enabledPlugins.clear();
     newPlugins.clear();
     // register existing enabled plugins as such and list new enabled plugins
-    foreach( FilterPlugin *plugin, pPluginLoader->getAllFilterPlugins() )
+    for(FilterPlugin *plugin : pPluginLoader->getAllFilterPlugins())
     {
         pluginName = plugin->name();
-        foreach( const ConversionPipeTrunk& trunk, plugin->codecTable() )
+        for(const ConversionPipeTrunk& trunk : plugin->codecTable())
         {
             if( trunk.enabled && trunk.codecFrom == "wav" && trunk.codecTo == "wav" )
             {
                 enabledPlugins += pluginName;
-                if( !data.backends.filters.contains(pluginName) && newPlugins.filter(QRegExp("[0-9]{8,8}"+pluginName)).count()==0 )
+                if( !data.backends.filters.contains(pluginName) && newPlugins.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count()==0 )
                 {
                     newPlugins += QString::number(trunk.rating).rightJustified(8,'0') + pluginName;
                     break;
@@ -324,7 +327,7 @@ void Config::load()
     if( data.app.configVersion < 1006 )
     {
         const QString src = QDir::homePath() + "/.kde4/share/apps/soundkonverter/profiles.xml";
-        const QString dest = KStandardDirs::locateLocal("data","soundkonverter/profiles.xml");
+        const QString dest = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles.xml";
         if( QFile::exists(src) && !QFile::exists(dest) )
         {
             QFile::copy(src, dest);
@@ -333,7 +336,7 @@ void Config::load()
     }
 
     logger->log( 1000, "\nloading profiles ..." );
-    QFile listFile( KStandardDirs::locateLocal("data","soundkonverter/profiles.xml") );
+    QFile listFile( QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles.xml" );
     if( listFile.open( QIODevice::ReadOnly ) )
     {
         QDomDocument list("soundkonverter_profilelist");
@@ -354,7 +357,7 @@ void Config::load()
                         ConversionOptions *conversionOptions = plugin->conversionOptionsFromXml( conversionOptionsElements.at(i).toElement(), &filterOptionsElements );
                         if( conversionOptions )
                         {
-                            foreach( const QDomElement& filterOptionsElement, filterOptionsElements )
+                            for(const QDomElement& filterOptionsElement : filterOptionsElements)
                             {
                                 FilterOptions *filterOptions = 0;
                                 const QString filterPluginName = filterOptionsElement.attribute("pluginName");
@@ -439,13 +442,13 @@ void Config::load()
         }
     }
 
-    group = conf->group( "BackendOptimizationsIgnoreList" );
-    const int backendOptimizationsIgnoreListCount = group.readEntry( "count", 0 );
+    settings.beginGroup("BackendOptimizationsIgnoreList");
+    const int backendOptimizationsIgnoreListCount = settings.value( "count", 0 ).toInt();
 
     CodecOptimizations::Optimization optimization;
     for( int i=0; i<backendOptimizationsIgnoreListCount; i++ )
     {
-        const QStringList backendOptimization = group.readEntry( QString("ignore_%1").arg(i), QStringList() );
+        const QStringList backendOptimization = settings.value( QString("ignore_%1").arg(i), QStringList() ).toStringList();
         optimization.codecName = backendOptimization.at(0);
         const QString mode = backendOptimization.at(1);
         if( mode == "Encode" )
@@ -475,70 +478,72 @@ void Config::save()
 {
     writeServiceMenu();
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
+    QSettings settings("soundkonverterrc", QSettings::IniFormat);
 
-    group = conf->group( "General" );
-    group.writeEntry( "configVersion", SOUNDKONVERTER_VERSION_NUMBER );
-    group.writeEntry( "startTab", data.general.startTab );
-    group.writeEntry( "lastTab", data.general.lastTab );
-    group.writeEntry( "defaultProfile", data.general.defaultProfile );
-    group.writeEntry( "lastProfile", data.general.lastProfile );
-    group.writeEntry( "defaultFormat", data.general.defaultFormat );
-    group.writeEntry( "lastFormat", data.general.lastFormat );
-    group.writeEntry( "lastOutputDirectoryMode", data.general.lastOutputDirectoryMode );
-    group.writeEntry( "specifyOutputDirectory", data.general.specifyOutputDirectory );
-    group.writeEntry( "metaDataOutputDirectory", data.general.metaDataOutputDirectory );
-    group.writeEntry( "copyStructureOutputDirectory", data.general.copyStructureOutputDirectory );
-    group.writeEntry( "lastMetaDataOutputDirectoryPaths", data.general.lastMetaDataOutputDirectoryPaths );
-    group.writeEntry( "lastNormalOutputDirectoryPaths", data.general.lastNormalOutputDirectoryPaths );
-    group.writeEntry( "waitForAlbumGain", data.general.waitForAlbumGain );
-    group.writeEntry( "useVFATNames", data.general.useVFATNames );
-    group.writeEntry( "copyIfSameCodec", data.general.copyIfSameCodec );
-    group.writeEntry( "writeLogFiles", data.general.writeLogFiles );
-    group.writeEntry( "conflictHandling", (int)data.general.conflictHandling );
-//     group.writeEntry( "priority", data.general.priority );
-    group.writeEntry( "numFiles", data.general.numFiles );
-    group.writeEntry( "numReplayGainFiles", data.general.numReplayGainFiles );
-//     group.writeEntry( "executeUserScript", data.general.executeUserScript );
-//     group.writeEntry( "showToolBar", data.general.showToolBar );
-//     group.writeEntry( "outputFilePermissions", data.general.outputFilePermissions );
-    group.writeEntry( "actionMenuConvertMimeTypes", data.general.actionMenuConvertMimeTypes );
-    group.writeEntry( "actionMenuReplayGainMimeTypes", data.general.actionMenuReplayGainMimeTypes );
-    group.writeEntry( "replayGainGrouping", (int)data.general.replayGainGrouping );
-    group.writeEntry( "preferredOggVorbisExtension", data.general.preferredOggVorbisExtension );
-    group.writeEntry( "preferredVorbisCommentCommentTag", data.general.preferredVorbisCommentCommentTag );
-    group.writeEntry( "preferredVorbisCommentTrackTotalTag", data.general.preferredVorbisCommentTrackTotalTag );
-    group.writeEntry( "preferredVorbisCommentDiscTotalTag", data.general.preferredVorbisCommentDiscTotalTag );
+    settings.beginGroup("General");
+    settings.setValue( "configVersion", SOUNDKONVERTER_VERSION_NUMBER );
+    settings.setValue( "startTab", data.general.startTab );
+    settings.setValue( "lastTab", data.general.lastTab );
+    settings.setValue( "defaultProfile", data.general.defaultProfile );
+    settings.setValue( "lastProfile", data.general.lastProfile );
+    settings.setValue( "defaultFormat", data.general.defaultFormat );
+    settings.setValue( "lastFormat", data.general.lastFormat );
+    settings.setValue( "lastOutputDirectoryMode", data.general.lastOutputDirectoryMode );
+    settings.setValue( "specifyOutputDirectory", data.general.specifyOutputDirectory );
+    settings.setValue( "metaDataOutputDirectory", data.general.metaDataOutputDirectory );
+    settings.setValue( "copyStructureOutputDirectory", data.general.copyStructureOutputDirectory );
+    settings.setValue( "lastMetaDataOutputDirectoryPaths", data.general.lastMetaDataOutputDirectoryPaths );
+    settings.setValue( "lastNormalOutputDirectoryPaths", data.general.lastNormalOutputDirectoryPaths );
+    settings.setValue( "waitForAlbumGain", data.general.waitForAlbumGain );
+    settings.setValue( "useVFATNames", data.general.useVFATNames );
+    settings.setValue( "copyIfSameCodec", data.general.copyIfSameCodec );
+    settings.setValue( "writeLogFiles", data.general.writeLogFiles );
+    settings.setValue( "conflictHandling", (int)data.general.conflictHandling );
+//     settings.setValue( "priority", data.general.priority );
+    settings.setValue( "numFiles", data.general.numFiles );
+    settings.setValue( "numReplayGainFiles", data.general.numReplayGainFiles );
+//     settings.setValue( "executeUserScript", data.general.executeUserScript );
+//     settings.setValue( "showToolBar", data.general.showToolBar );
+//     settings.setValue( "outputFilePermissions", data.general.outputFilePermissions );
+    settings.setValue( "actionMenuConvertMimeTypes", data.general.actionMenuConvertMimeTypes );
+    settings.setValue( "actionMenuReplayGainMimeTypes", data.general.actionMenuReplayGainMimeTypes );
+    settings.setValue( "replayGainGrouping", (int)data.general.replayGainGrouping );
+    settings.setValue( "preferredOggVorbisExtension", data.general.preferredOggVorbisExtension );
+    settings.setValue( "preferredVorbisCommentCommentTag", data.general.preferredVorbisCommentCommentTag );
+    settings.setValue( "preferredVorbisCommentTrackTotalTag", data.general.preferredVorbisCommentTrackTotalTag );
+    settings.setValue( "preferredVorbisCommentDiscTotalTag", data.general.preferredVorbisCommentDiscTotalTag );
 
-    group = conf->group( "Advanced" );
-    group.writeEntry( "useSharedMemoryForTempFiles", data.advanced.useSharedMemoryForTempFiles );
-    group.writeEntry( "maxSizeForSharedMemoryTempFiles", data.advanced.maxSizeForSharedMemoryTempFiles );
-    group.writeEntry( "usePipes", data.advanced.usePipes );
-    group.writeEntry( "ejectCdAfterRip", data.advanced.ejectCdAfterRip );
+    settings.endGroup();
+    settings.beginGroup("Advanced");
+    settings.setValue( "useSharedMemoryForTempFiles", data.advanced.useSharedMemoryForTempFiles );
+    settings.setValue( "maxSizeForSharedMemoryTempFiles", data.advanced.maxSizeForSharedMemoryTempFiles );
+    settings.setValue( "usePipes", data.advanced.usePipes );
+    settings.setValue( "ejectCdAfterRip", data.advanced.ejectCdAfterRip );
 
-    group = conf->group( "CoverArt" );
-    group.writeEntry( "writeCovers", data.coverArt.writeCovers );
-    group.writeEntry( "writeCoverName", data.coverArt.writeCoverName );
-    group.writeEntry( "writeCoverDefaultName", data.coverArt.writeCoverDefaultName );
+    settings.endGroup();
+    settings.beginGroup("CoverArt");
+    settings.setValue( "writeCovers", data.coverArt.writeCovers );
+    settings.setValue( "writeCoverName", data.coverArt.writeCoverName );
+    settings.setValue( "writeCoverDefaultName", data.coverArt.writeCoverDefaultName );
 
-    group = conf->group( "Backends" );
-    group.deleteEntry( "rippers" );
+    settings.endGroup();
+    settings.beginGroup("Backends");
+    settings.remove( "rippers" );
     QStringList formats;
-    foreach( const CodecData& codec, data.backends.codecs )
+    for(const CodecData& codec : data.backends.codecs)
     {
         const QString format = codec.codecName;
-        group.writeEntry( format + "_encoders", codec.encoders );
-        group.writeEntry( format + "_decoders", codec.decoders );
-        group.writeEntry( format + "_replaygain", codec.replaygain );
+        settings.setValue( format + "_encoders", codec.encoders );
+        settings.setValue( format + "_decoders", codec.decoders );
+        settings.setValue( format + "_replaygain", codec.replaygain );
         formats += format;
     }
-    group.writeEntry( "formats", formats );
-    group.writeEntry( "filters", data.backends.filters );
-    group.writeEntry( "enabledFilters", data.backends.enabledFilters );
+    settings.setValue( "formats", formats );
+    settings.setValue( "filters", data.backends.filters );
+    settings.setValue( "enabledFilters", data.backends.enabledFilters );
 
-    group = conf->group( "BackendOptimizationsIgnoreList" );
-    group.writeEntry( "count", data.backendOptimizationsIgnoreList.optimizationList.count() );
+    settings.beginGroup("BackendOptimizationsIgnoreList");
+    settings.setValue( "count", data.backendOptimizationsIgnoreList.optimizationList.count() );
 
     for( int i=0; i<data.backendOptimizationsIgnoreList.optimizationList.count(); i++ )
     {
@@ -558,7 +563,7 @@ void Config::save()
         }
         backendOptimization << data.backendOptimizationsIgnoreList.optimizationList.at(i).currentBackend;
         backendOptimization << data.backendOptimizationsIgnoreList.optimizationList.at(i).betterBackend;
-        group.writeEntry( QString("ignore_%1").arg(i), backendOptimization );
+        settings.setValue( QString("ignore_%1").arg(i), backendOptimization );
     }
 
     emit updateWriteLogFilesSetting( data.general.writeLogFiles );
@@ -577,7 +582,7 @@ void Config::writeServiceMenu()
     const QStringList convertFormats = pPluginLoader->formatList( PluginLoader::Decode, PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid) );
 
     mimeTypes.clear();
-    foreach( const QString& format, convertFormats )
+    for(const QString& format : convertFormats)
     {
         mimeTypes += pPluginLoader->codecMimeTypes( format );
     }
@@ -592,9 +597,12 @@ void Config::writeServiceMenu()
     content += "Icon=soundkonverter\n";
     content += "Exec=soundkonverter %F\n";
 
-    const QString convertActionFileName = KStandardDirs::locateLocal( "services", "ServiceMenus/convert_with_soundkonverter.desktop" );
+    QString convertActionFileName = QStandardPaths::locate(QStandardPaths::GenericDataLocation, "ServiceMenus/convert_with_soundkonverter.desktop" );
+    if( convertActionFileName.isEmpty() )
+        convertActionFileName = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/kf6/services/ServiceMenus/convert_with_soundkonverter.desktop";
     if( ( data.general.actionMenuConvertMimeTypes != mimeTypes || !QFile::exists(convertActionFileName) ) && mimeTypes.count() > 0 )
     {
+        QDir().mkpath( QFileInfo(convertActionFileName).absolutePath() );
         QFile convertActionFile( convertActionFileName );
         if( convertActionFile.open( QIODevice::WriteOnly | QIODevice::Text ) )
         {
@@ -613,7 +621,7 @@ void Config::writeServiceMenu()
     const QStringList replaygainFormats = pPluginLoader->formatList( PluginLoader::ReplayGain, PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid) );
 
     mimeTypes.clear();
-    foreach( const QString& format, replaygainFormats )
+    for(const QString& format : replaygainFormats)
     {
         mimeTypes += pPluginLoader->codecMimeTypes( format );
     }
@@ -628,9 +636,12 @@ void Config::writeServiceMenu()
     content += "Icon=soundkonverter-replaygain\n";
     content += "Exec=soundkonverter --replaygain %F\n";
 
-    const QString replaygainActionFileName = KStandardDirs::locateLocal( "services", "ServiceMenus/add_replaygain_with_soundkonverter.desktop" );
+    QString replaygainActionFileName = QStandardPaths::locate(QStandardPaths::GenericDataLocation, "ServiceMenus/add_replaygain_with_soundkonverter.desktop" );
+    if( replaygainActionFileName.isEmpty() )
+        replaygainActionFileName = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/kf6/services/ServiceMenus/add_replaygain_with_soundkonverter.desktop";
     if( ( data.general.actionMenuReplayGainMimeTypes != mimeTypes || !QFile::exists(replaygainActionFileName) ) && mimeTypes.count() > 0 )
     {
+        QDir().mkpath( QFileInfo(replaygainActionFileName).absolutePath() );
         QFile replaygainActionFile( replaygainActionFileName );
         if( replaygainActionFile.open( QIODevice::WriteOnly | QIODevice::Text ) )
         {
@@ -646,7 +657,7 @@ QStringList Config::customProfiles()
 {
     QStringList profiles;
 
-    foreach( const QString& profileName, data.profiles.keys() )
+    for(const QString& profileName : data.profiles.keys())
     {
         if( profileName == "soundkonverter_last_used" )
             continue;
@@ -654,7 +665,7 @@ QStringList Config::customProfiles()
         const ConversionOptions* profileConversionOptions = data.profiles.value(profileName);
 
         QList<CodecPlugin*> plugins = pPluginLoader->encodersForCodec( profileConversionOptions->codecName );
-        foreach( const CodecPlugin *plugin, plugins )
+        for(const CodecPlugin *plugin : plugins)
         {
             if( plugin->name() == profileConversionOptions->pluginName )
             {
@@ -669,7 +680,7 @@ QStringList Config::customProfiles()
 
 QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIgnored )
 {
-    QTime time;
+    QElapsedTimer time;
     time.start();
 
     QList<CodecOptimizations::Optimization> optimizationList;
@@ -683,7 +694,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
     bool ignore;
 
     const QStringList formats = pPluginLoader->formatList( PluginLoader::Possibilities(PluginLoader::Encode|PluginLoader::Decode|PluginLoader::ReplayGain), PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid) );
-    foreach( const QString& format, formats )
+    for(const QString& format : formats)
     {
         if( format == "wav" )
             continue;
@@ -707,7 +718,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
             if( pPluginLoader->conversionPipeTrunks.at(j).codecTo == format && pPluginLoader->conversionPipeTrunks.at(j).enabled && pPluginLoader->conversionPipeTrunks.at(j).plugin->type() == "codec" )
             {
                 const QString pluginName = pPluginLoader->conversionPipeTrunks.at(j).plugin->name();
-                if( tempPluginList.filter(QRegExp("[0-9]{8,8}"+pluginName)).count() == 0 )
+                if( tempPluginList.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count() == 0 )
                 {
                     tempPluginList += QString::number(pPluginLoader->conversionPipeTrunks.at(j).rating).rightJustified(8,'0') + pluginName;
                 }
@@ -718,7 +729,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
             if( pPluginLoader->filterPipeTrunks.at(j).codecTo == format && pPluginLoader->filterPipeTrunks.at(j).enabled && pPluginLoader->filterPipeTrunks.at(j).plugin->type() == "filter" )
             {
                 const QString pluginName = pPluginLoader->filterPipeTrunks.at(j).plugin->name();
-                if( tempPluginList.filter(QRegExp("[0-9]{8,8}"+pluginName)).count() == 0 )
+                if( tempPluginList.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count() == 0 )
                 {
                     tempPluginList += QString::number(pPluginLoader->filterPipeTrunks.at(j).rating).rightJustified(8,'0') + pluginName;
                 }
@@ -786,7 +797,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
             if( pPluginLoader->conversionPipeTrunks.at(j).codecFrom == format && pPluginLoader->conversionPipeTrunks.at(j).enabled && pPluginLoader->conversionPipeTrunks.at(j).plugin->type() == "codec" )
             {
                 const QString pluginName = pPluginLoader->conversionPipeTrunks.at(j).plugin->name();
-                if( tempPluginList.filter(QRegExp("[0-9]{8,8}"+pluginName)).count() == 0 )
+                if( tempPluginList.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count() == 0 )
                 {
                     tempPluginList += QString::number(pPluginLoader->conversionPipeTrunks.at(j).rating).rightJustified(8,'0') + pluginName;
                 }
@@ -797,7 +808,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
             if( pPluginLoader->filterPipeTrunks.at(j).codecFrom == format && pPluginLoader->filterPipeTrunks.at(j).enabled && pPluginLoader->filterPipeTrunks.at(j).plugin->type() == "filter" )
             {
                 const QString pluginName = pPluginLoader->filterPipeTrunks.at(j).plugin->name();
-                if( tempPluginList.filter(QRegExp("[0-9]{8,8}"+pluginName)).count() == 0 )
+                if( tempPluginList.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count() == 0 )
                 {
                     tempPluginList += QString::number(pPluginLoader->filterPipeTrunks.at(j).rating).rightJustified(8,'0') + pluginName;
                 }
@@ -865,7 +876,7 @@ QList<CodecOptimizations::Optimization> Config::getOptimizations( bool includeIg
             if( pPluginLoader->replaygainPipes.at(j).codecName == format && pPluginLoader->replaygainPipes.at(j).enabled )
             {
                 const QString pluginName = pPluginLoader->replaygainPipes.at(j).plugin->name();
-                if( tempPluginList.filter(QRegExp("[0-9]{8,8}"+pluginName)).count() == 0 )
+                if( tempPluginList.filter(QRegularExpression("[0-9]{8,8}"+pluginName)).count() == 0 )
                 {
                     tempPluginList += QString::number(pPluginLoader->replaygainPipes.at(j).rating).rightJustified(8,'0') + pluginName;
                 }

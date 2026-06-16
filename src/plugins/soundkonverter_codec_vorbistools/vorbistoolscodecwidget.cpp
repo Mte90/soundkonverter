@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "vorbistoolscodecglobal.h"
 
 #include "vorbistoolscodecwidget.h"
@@ -7,8 +10,8 @@
 #include <math.h>
 
 #include <QApplication>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <QLayout>
 #include <QLabel>
 #include <QDoubleSpinBox>
@@ -32,7 +35,7 @@ VorbisToolsCodecWidget::VorbisToolsCodecWidget()
 
     QLabel *lMode = new QLabel( i18n("Mode:"), this );
     topBox->addWidget( lMode );
-    cMode = new KComboBox( this );
+    cMode = new QComboBox( this );
     cMode->addItem( i18n("Quality") );
     cMode->addItem( i18n("Bitrate") );
     connect( cMode, SIGNAL(activated(int)), this, SLOT(modeChanged(int)) );
@@ -56,7 +59,7 @@ VorbisToolsCodecWidget::VorbisToolsCodecWidget()
 
     QLabel *lBitrateMode = new QLabel( i18n("Bitrate mode:"), this );
     topBox->addWidget( lBitrateMode );
-    cBitrateMode = new KComboBox( this );
+    cBitrateMode = new QComboBox( this );
     cBitrateMode->addItem( i18n("Variable") );
     cBitrateMode->addItem( i18n("Average") );
     cBitrateMode->addItem( i18n("Constant") );

@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "wavpackcodecglobal.h"
 
 #include "wavpackcodecwidget.h"
@@ -10,8 +13,8 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <KLineEdit>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 
 
 WavPackCodecWidget::WavPackCodecWidget()
@@ -29,7 +32,7 @@ WavPackCodecWidget::WavPackCodecWidget()
     QLabel *lCompressionLevel = new QLabel( i18n("Compression level:"), this );
     topBox->addWidget( lCompressionLevel );
 
-    cCompressionLevel = new KComboBox(  this );
+    cCompressionLevel = new QComboBox(  this );
     cCompressionLevel->addItem( i18n("Fast") );
     cCompressionLevel->addItem( i18n("Normal") );
     cCompressionLevel->addItem( i18n("High quality") );

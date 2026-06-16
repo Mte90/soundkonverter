@@ -5,16 +5,18 @@
 #include "config.h"
 #include "codecproblems.h"
 
-#include <KApplication>
+#include <QApplication>
 #include <QResizeEvent>
 #include <QGridLayout>
 #include <QProgressBar>
-#include <KMessageBox>
+#include <QMessageBox>
+#include <klocalizedstring.h>
 #include <QDir>
 #include <QFileInfo>
-#include <KAction>
+#include <QAction>
 #include <QMenu>
-#include <KIcon>
+#include <QIcon>
+#include <QMimeData>
 
 
 ReplayGainFileList::ReplayGainFileList( Config *_config, Logger *_logger, QWidget *parent )
@@ -57,23 +59,23 @@ ReplayGainFileList::ReplayGainFileList( Config *_config, Logger *_logger, QWidge
     grid->addWidget( pScanStatus, 1, 1 );
     grid->setColumnStretch( 1, 2 );
 
-    collapseAction = new KAction( KIcon("view-process-all"), i18n("Collapse all"), this );
+    collapseAction = new QAction( QIcon::fromTheme("view-process-all"), i18n("Collapse all"), this );
     collapseAction->setShortcut( Qt::CTRL | Qt::Key_Minus );
     connect( collapseAction, SIGNAL(triggered()), this, SLOT(collapseAll()) );
     addAction( collapseAction );
-    expandAction = new KAction( KIcon("view-process-all-tree"), i18n("Expand all"), this );
+    expandAction = new QAction( QIcon::fromTheme("view-process-all-tree"), i18n("Expand all"), this );
     expandAction->setShortcut( Qt::CTRL | Qt::Key_Plus );
     connect( expandAction, SIGNAL(triggered()), this, SLOT(expandAll()) );
     addAction( expandAction );
-//     processAddAction = new KAction( KIcon("list-add"), i18n("Calculate Replay Gain"), this );
+//     processAddAction = new QAction( QIcon::fromTheme("list-add"), i18n("Calculate Replay Gain"), this );
 //     connect( processAddAction, SIGNAL(triggered()), this, SLOT(processAddSelectedItems()) );
-//     processRemoveAction = new KAction( KIcon("list-remove"), i18n("Remove Replay Gain"), this );
+//     processRemoveAction = new QAction( QIcon::fromTheme("list-remove"), i18n("Remove Replay Gain"), this );
 //     connect( processRemoveAction, SIGNAL(triggered()), this, SLOT(processRemoveSelectedItems()) );
-//     killAction = new KAction( KIcon("process-stop"), i18n("Stop calculation"), this );
+//     killAction = new QAction( QIcon::fromTheme("process-stop"), i18n("Stop calculation"), this );
 //     connect( killAction, SIGNAL(triggered()), this, SLOT(killSelectedItems()) );
-    moveAction = new KAction( KIcon ("folder-new"), i18n("Move to new Album"), this );
+    moveAction = new QAction( QIcon::fromTheme("folder-new"), i18n("Move to new Album"), this );
     connect( moveAction, SIGNAL(triggered()), this, SLOT(moveSelectedItems()) );
-    removeAction = new KAction( KIcon("edit-delete"), i18n("Remove"), this );
+    removeAction = new QAction( QIcon::fromTheme("edit-delete"), i18n("Remove"), this );
     removeAction->setShortcut( QKeySequence::Delete );
     connect( removeAction, SIGNAL(triggered()), this, SLOT(removeSelectedItems()) );
     addAction( removeAction );
@@ -102,8 +104,8 @@ void ReplayGainFileList::dragMoveEvent( QDragMoveEvent *event )
 void ReplayGainFileList::dropEvent( QDropEvent *event )
 {
     const QList<QUrl> q_urls = event->mimeData()->urls();
-    KUrl::List k_urls;
-    KUrl::List k_urls_dirs;
+    QList<QUrl> k_urls;
+    QList<QUrl> k_urls_dirs;
     QStringList errorList;
     //    codec    @0 files @1 solutions
     QMap< QString, QList<QStringList> > problems;
@@ -124,7 +126,7 @@ void ReplayGainFileList::dropEvent( QDropEvent *event )
             if( destination->type == ReplayGainFileListItem::Album )
             {
                 QList<QTreeWidgetItem*> q_items = selectedItems();
-                foreach( const QTreeWidgetItem *q_item, q_items )
+                for(const QTreeWidgetItem *q_item : q_items)
                 {
                     const ReplayGainFileListItem *item = static_cast<const ReplayGainFileListItem*>(q_item);
 
@@ -147,7 +149,7 @@ void ReplayGainFileList::dropEvent( QDropEvent *event )
             }
             else if( showMessage )
             {
-                KMessageBox::error( this, i18n("Some tracks can't be added to the album because either the codec or the sampling rate is different.") );
+                QMessageBox::critical( this, tr("Error"), i18n("Some tracks can't be added to the album because either the codec or the sampling rate is different.") );
             }
         }
 
@@ -171,7 +173,7 @@ void ReplayGainFileList::dropEvent( QDropEvent *event )
         const bool canDecodeAlac = config->pluginLoader()->canDecode( "m4a/alac" );
         const bool checkM4a = ( !canDecodeAac || !canDecodeAlac ) && canDecodeAac != canDecodeAlac;
 
-        foreach( const QUrl& url, q_urls )
+        for(const QUrl& url : q_urls)
         {
             QString mimeType;
             QString codecName = config->pluginLoader()->getCodecFromFile( url, &mimeType, checkM4a );
@@ -201,7 +203,7 @@ void ReplayGainFileList::dropEvent( QDropEvent *event )
                 )
                     continue;
 
-                fileName = KUrl(url).pathOrUrl();
+                fileName = QUrl(url).toLocalFile();
 
                 if( codecName.isEmpty() )
                     codecName = mimeType;
@@ -274,7 +276,7 @@ void ReplayGainFileList::dropEvent( QDropEvent *event )
         {
             addFiles( k_urls );
         }
-        foreach( const KUrl& url, k_urls_dirs )
+        for(const QUrl& url : k_urls_dirs)
         {
             addDir( url, true, config->pluginLoader()->formatList(PluginLoader::ReplayGain,PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid)) );
         }
@@ -307,7 +309,7 @@ int ReplayGainFileList::countDir( const QString& directory, bool recursive, int 
 
         const QStringList list = dir.entryList();
 
-        foreach( const QString& fileName, list )
+        for(const QString& fileName : list)
         {
             count = countDir( directory + "/" + fileName, recursive, count );
         }
@@ -316,7 +318,7 @@ int ReplayGainFileList::countDir( const QString& directory, bool recursive, int 
     if( tScanStatus.elapsed() > ConfigUpdateDelay * 10 )
     {
         pScanStatus->setMaximum( count );
-        kapp->processEvents();
+        QCoreApplication::processEvents();
         tScanStatus.start();
     }
 
@@ -337,7 +339,7 @@ int ReplayGainFileList::listDir( const QString& directory, const QStringList& fi
     const bool containsAlac = filter.contains("m4a/alac");
     const bool checkM4a = ( containsAac || containsAlac ) && containsAac != containsAlac;
 
-    foreach( const QString& fileName, list )
+    for(const QString& fileName : list)
     {
         QFileInfo fileInfo( directory + "/" + fileName );
 
@@ -370,12 +372,12 @@ int ReplayGainFileList::listDir( const QString& directory, const QStringList& fi
     return count;
 }
 
-void ReplayGainFileList::addFiles( const KUrl::List& fileList, const QString& _codecName )
+void ReplayGainFileList::addFiles( const QList<QUrl>& fileList, const QString& _codecName )
 {
     ReplayGainFileListItem *newAlbumItem, *newTrackItem;
     QString codecName;
 
-    foreach( const KUrl& url, fileList )
+    for(const QUrl& url : fileList)
     {
         if( !_codecName.isEmpty() )
         {
@@ -412,13 +414,13 @@ void ReplayGainFileList::addFiles( const KUrl::List& fileList, const QString& _c
                       (
                           config->data.general.replayGainGrouping == Config::Data::General::AlbumDirectory &&
                           topLevelItem(j)->albumName == tags->album &&
-                          topLevelItem(j)->url.toLocalFile() == url.directory()
+                          topLevelItem(j)->url.toLocalFile() == url.toLocalFile()
                       ) || (
                           config->data.general.replayGainGrouping == Config::Data::General::Album &&
                           topLevelItem(j)->albumName == tags->album
                       ) || (
                           config->data.general.replayGainGrouping == Config::Data::General::Directory &&
-                          topLevelItem(j)->url.toLocalFile() == url.directory()
+                          topLevelItem(j)->url.toLocalFile() == url.toLocalFile()
                       )
                     )
                   )
@@ -442,11 +444,11 @@ void ReplayGainFileList::addFiles( const KUrl::List& fileList, const QString& _c
                 newAlbumItem->type = ReplayGainFileListItem::Album;
                 newAlbumItem->codecName = codecName;
                 newAlbumItem->samplingRate = samplingRate;
-                newAlbumItem->url = url.directory();
+                newAlbumItem->url = url.toLocalFile();
                 if( config->data.general.replayGainGrouping == Config::Data::General::AlbumDirectory )
                 {
                     newAlbumItem->albumName = tags->album;
-                    newAlbumItem->setToolTip( Column_File, url.directory() );
+                    newAlbumItem->setToolTip( Column_File, url.toLocalFile() );
                 }
                 else if( config->data.general.replayGainGrouping == Config::Data::General::Album )
                 {
@@ -454,7 +456,7 @@ void ReplayGainFileList::addFiles( const KUrl::List& fileList, const QString& _c
                 }
                 else
                 {
-                    newAlbumItem->albumName = url.directory();
+                    newAlbumItem->albumName = url.toLocalFile(), QFileInfo();
                 }
                 newAlbumItem->setExpanded( true );
                 newAlbumItem->setFlags( newAlbumItem->flags() ^ Qt::ItemIsDragEnabled );
@@ -499,7 +501,7 @@ void ReplayGainFileList::addDir( const QUrl& directory, bool recursive, const QS
     const int count = countDir( directory.toLocalFile(), recursive );
 
     pScanStatus->setMaximum( count );
-    kapp->processEvents();
+    QCoreApplication::processEvents();
 
     listDir( directory.toLocalFile(), codecList, recursive );
 
@@ -518,13 +520,13 @@ void ReplayGainFileList::updateItem( ReplayGainFileListItem *item, bool initialU
     else
     {
         if( config->data.general.replayGainGrouping == Config::Data::General::Album )
-            item->setText( Column_File, item->url.pathOrUrl() );
+            item->setText( Column_File, item->url.toLocalFile() );
         else
             item->setText( Column_File, item->url.fileName() );
 
         if( item->tags && item->tags->tagsRead & TagData::TrackGain )
         {
-            item->setText( Column_Track, QString().sprintf("%+.2f dB",item->tags->trackGain) );
+            item->setText( Column_Track, QString::asprintf("%+.2f dB",item->tags->trackGain) );
         }
         else
         {
@@ -532,7 +534,7 @@ void ReplayGainFileList::updateItem( ReplayGainFileListItem *item, bool initialU
         }
         if( item->tags && item->tags->tagsRead & TagData::AlbumGain )
         {
-            item->setText( Column_Album, QString().sprintf("%+.2f dB",item->tags->albumGain) );
+            item->setText( Column_Album, QString::asprintf("%+.2f dB",item->tags->albumGain) );
         }
         else
         {
@@ -921,7 +923,7 @@ void ReplayGainFileList::showContextMenu( const QPoint& point )
     bool canMove = q_items.count() > 0;
 //     bool canKill = q_items.count() > 0;
 
-    foreach( const QTreeWidgetItem *q_item, q_items )
+    for(const QTreeWidgetItem *q_item : q_items)
     {
         const ReplayGainFileListItem *item = static_cast<const ReplayGainFileListItem*>(q_item);
 
@@ -1022,7 +1024,7 @@ void ReplayGainFileList::showContextMenu( const QPoint& point )
 
 // void ReplayGainFileList::processAddSelectedItems()
 // {
-//     foreach( QTreeWidgetItem *q_item, selectedItems() )
+//     for(QTreeWidgetItem *q_item : selectedItems())
 //     {
 //         ReplayGainFileListItem *item = (ReplayGainFileListItem*)q_item;
 //
@@ -1052,7 +1054,7 @@ void ReplayGainFileList::showContextMenu( const QPoint& point )
 
 // void ReplayGainFileList::processRemoveSelectedItems()
 // {
-//     foreach( QTreeWidgetItem *q_item, selectedItems() )
+//     for(QTreeWidgetItem *q_item : selectedItems())
 //     {
 //         ReplayGainFileListItem *item = (ReplayGainFileListItem*)q_item;
 //
@@ -1070,7 +1072,7 @@ void ReplayGainFileList::moveSelectedItems()
     ReplayGainFileListItem *newAlbumItem = 0;
 
     const QList<QTreeWidgetItem*> q_items = selectedItems();
-    foreach( QTreeWidgetItem *q_item, q_items )
+    for(QTreeWidgetItem *q_item : q_items)
     {
         ReplayGainFileListItem *item = static_cast<ReplayGainFileListItem*>(q_item);
         if( !item )
@@ -1083,7 +1085,7 @@ void ReplayGainFileList::moveSelectedItems()
             newAlbumItem->albumName = i18n("New album");
             newAlbumItem->codecName = item->codecName;
             newAlbumItem->samplingRate = item->samplingRate;
-            newAlbumItem->url = KUrl(item->url.directory());
+            newAlbumItem->url = QUrl::fromLocalFile( item->url.toLocalFile() );
             newAlbumItem->setExpanded( true );
             newAlbumItem->setFlags( newAlbumItem->flags() ^ Qt::ItemIsDragEnabled );
         }

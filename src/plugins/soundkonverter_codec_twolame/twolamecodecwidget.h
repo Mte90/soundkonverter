@@ -6,7 +6,7 @@
 
 #include <QGroupBox>
 
-class KComboBox;
+class QComboBox;
 class QSpinBox;
 class QCheckBox;
 class QLabel;
@@ -29,7 +29,7 @@ public:
 
 private:
     // user defined options
-    KComboBox *cMode;
+    QComboBox *cMode;
     QSpinBox *iQuality;
     QSlider *sQuality;
     QCheckBox *cCmdArguments;

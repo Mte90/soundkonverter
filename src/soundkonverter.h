@@ -8,19 +8,17 @@
 
 
 #include <KXmlGuiWindow>
-#include <KUrl>
-#include <kdeversion.h>
+#include <kxmlgui_version.h>
+#include <KActionCollection>
+#include <QSystemTrayIcon>
 
 class soundKonverterView;
 class KToggleAction;
-class KUrl;
 class Config;
 class Logger;
 class LogViewer;
 class CDManager;
 class ReplayGainScanner;
-
-class KStatusNotifierItem;
 
 
 /**
@@ -41,11 +39,11 @@ public:
     /** Default Destructor */
     ~soundKonverter();
 
-    virtual void saveProperties( KConfigGroup& configGroup );
+    void saveProperties( KConfigGroup& configGroup ) override;
 
     void showSystemTray();
-    void addConvertFiles( const KUrl::List& urls, const QString& profile, const QString& format, const QString& directory, const QString& notifyCommand );
-    void addReplayGainFiles( const KUrl::List& urls );
+    void addConvertFiles( const QStringList& urls, const QString& profile, const QString& format, const QString& directory, const QString& notifyCommand );
+    void addReplayGainFiles( const QStringList& urls );
     bool ripCd( const QString& device, const QString& profile, const QString& format, const QString& directory, const QString& notifyCommand );
     void setAutoClose( bool enabled ) { autoclose = enabled; }
     void startConversion();
@@ -71,12 +69,12 @@ private:
     Config *config;
     Logger *logger;
     CDManager *cdManager;
-    QWeakPointer<ReplayGainScanner> replayGainScanner;
+    QSharedPointer<ReplayGainScanner> replayGainScanner;
 
     soundKonverterView *m_view;
     LogViewer *logViewer;
 
-    KStatusNotifierItem *systemTray;
+    QSystemTrayIcon *systemTray;
 
     /// exit soundkonverter after all files have been converted
     bool autoclose;

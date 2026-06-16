@@ -1,5 +1,19 @@
+cmake_minimum_required(VERSION 4.3)
+
+# Workaround for CMake 4.x + Qt6 Qml macro compatibility
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
+# Set minimum policy version for Qt6Qml macro compatibility
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
+# Explicitly set QT_DEFAULT_MAJOR_VERSION before finding Qt6/KF6
+set(QT_DEFAULT_MAJOR_VERSION 6)
+
 project(soundkonverter)
-cmake_minimum_required(VERSION 3.3.0)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -28,10 +42,18 @@ include(CMakePackageConfigHelpers)
 include(ECMInstallIcons)
 include(FeatureSummary)
 
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets Xml)
-find_package(KF5 REQUIRED COMPONENTS I18n XmlGui KIO Solid Config ConfigWidgets WidgetsAddons KDELibs4Support)
-find_package(KF5Cddb)
-find_package(Phonon4Qt5 REQUIRED)
+# Find Qt6 explicitly first with Qml component to establish Qt6 context
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Xml Qml)
+# Now find KF6 - Qt6Qml will already be available in context
+find_package(KF6 REQUIRED COMPONENTS I18n XmlGui KIO Solid Config ConfigWidgets WidgetsAddons)
+find_package(KF6Cddb QUIET)
+if(NOT KF6Cddb_FOUND)
+    find_package(KCddb6 QUIET)
+endif()
+set(HAVE_CDBD ${KF6Cddb_FOUND} ${KCddb6_FOUND})
+# Phonon is optional - try Qt6 version first, fallback to none if not available
+find_package(Phonon4Qt6 QUIET)
+set(HAVE_PHONON ${Phonon4Qt6_FOUND})
 
 
 # additional libs
@@ -66,7 +88,7 @@ set(soundkonvertercore_SRCS
 )
 
 add_library(soundkonvertercore SHARED ${soundkonvertercore_SRCS})
-target_link_libraries(soundkonvertercore KF5::WidgetsAddons KF5::KIOFileWidgets KF5::KIOCore KF5::KDELibs4Support)
+target_link_libraries(soundkonvertercore KF6::I18n KF6::WidgetsAddons KF6::KIOFileWidgets KF6::KIOCore)
 
 install(TARGETS soundkonvertercore DESTINATION ${LIB_INSTALL_DIR})
 
@@ -118,7 +140,19 @@ set(soundkonverter_SRCS
 )
 
 add_executable(soundkonverter ${soundkonverter_SRCS})
-target_link_libraries(soundkonverter KF5::WidgetsAddons KF5::KIOFileWidgets KF5::KIOCore KF5::Solid KF5::Cddb Phonon::phonon4qt5 Taglib::Taglib ${CDPARANOIA_LIBRARIES} KF5::KDELibs4Support soundkonvertercore)
+if(HAVE_PHONON)
+    if(KF6Cddb_FOUND)
+        target_link_libraries(soundkonverter KF6::XmlGui KF6::WidgetsAddons KF6::KIOFileWidgets KF6::KIOCore KF6::Solid KF6::Cddb Phonon::phonon4qt6 Taglib::Taglib ${CDPARANOIA_LIBRARIES} soundkonvertercore)
+    elseif(KCddb6_FOUND)
+        target_link_libraries(soundkonverter KF6::XmlGui KF6::WidgetsAddons KF6::KIOFileWidgets KF6::KIOCore KF6::Solid KCddb6 Phonon::phonon4qt6 Taglib::Taglib ${CDPARANOIA_LIBRARIES} soundkonvertercore)
+    endif()
+else()
+    if(KF6Cddb_FOUND)
+        target_link_libraries(soundkonverter KF6::XmlGui KF6::WidgetsAddons KF6::KIOFileWidgets KF6::KIOCore KF6::Solid KF6::Cddb Taglib::Taglib ${CDPARANOIA_LIBRARIES} soundkonvertercore)
+    elseif(KCddb6_FOUND)
+        target_link_libraries(soundkonverter KF6::XmlGui KF6::WidgetsAddons KF6::KIOFileWidgets KF6::KIOCore KF6::Solid KCddb6 Taglib::Taglib ${CDPARANOIA_LIBRARIES} soundkonvertercore)
+    endif()
+endif()
 
 install(TARGETS soundkonverter DESTINATION ${BIN_INSTALL_DIR})
 

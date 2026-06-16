@@ -12,7 +12,7 @@ ConversionOptionsManager::ConversionOptionsManager( PluginLoader *_pluginLoader,
 
 ConversionOptionsManager::~ConversionOptionsManager()
 {
-    foreach( const ConversionOptionsElement& element, elements.values() )
+    for(const ConversionOptionsElement& element : elements.values())
     {
         delete element.conversionOptions;
     }
@@ -27,7 +27,7 @@ int ConversionOptionsManager::addConversionOptions( ConversionOptions *conversio
         return -1;
     }
 
-    foreach( const ConversionOptionsElement& element, elements )
+    for(const ConversionOptionsElement& element : elements)
     {
         if( element.conversionOptions->pluginName == conversionOptions->pluginName )
         {

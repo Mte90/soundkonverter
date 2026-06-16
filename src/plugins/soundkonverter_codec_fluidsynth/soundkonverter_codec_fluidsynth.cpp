@@ -1,4 +1,8 @@
 
+#include <QStandardPaths>
+#include <QSettings>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "fluidsynthcodecglobal.h"
 
 #include "soundkonverter_codec_fluidsynth.h"
@@ -6,10 +10,14 @@
 #include "fluidsynthcodecwidget.h"
 
 #include <QApplication>
-#include <KDialog>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QLabel>
-#include <KUrlRequester>
+#include <QFileDialog>
 
 
 soundkonverter_codec_fluidsynth::soundkonverter_codec_fluidsynth( QObject *parent, const QVariantList& args  )
@@ -17,7 +25,7 @@ soundkonverter_codec_fluidsynth::soundkonverter_codec_fluidsynth( QObject *paren
 {
     Q_UNUSED(args)
 
-    configDialogSoundFontUrlRequester = 0;
+    configDialogSoundFontLineEdit = 0;
 
     binaries["fluidsynth"] = "";
 
@@ -25,11 +33,9 @@ soundkonverter_codec_fluidsynth::soundkonverter_codec_fluidsynth( QObject *paren
     allCodecs += "mod";
     allCodecs += "wav";
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-
-    group = conf->group( "Plugin-"+name() );
-    soundFontFile = group.readEntry( "soundFontFile", QUrl() );
+    QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+    conf.beginGroup("Plugin-" + name());
+    soundFontFile = conf.value( "soundFontFile", QUrl() ).toUrl();
 }
 
 soundkonverter_codec_fluidsynth::~soundkonverter_codec_fluidsynth()
@@ -77,43 +83,60 @@ void soundkonverter_codec_fluidsynth::showConfigDialog( ActionType action, const
     Q_UNUSED(action)
     Q_UNUSED(codecName)
 
-    if( !configDialog.data() )
+    if( !configDialog )
     {
         const int fontHeight = QFontMetrics(QApplication::font()).boundingRect("M").size().height();
 
-        configDialog = new KDialog( parent );
-        configDialog.data()->setCaption( i18n("Configure %1",*global_plugin_name) );
-        configDialog.data()->setButtons( KDialog::Ok | KDialog::Cancel );
+        configDialog = new QDialog( parent );
+        configDialog->setWindowTitle( i18n("Configure %1",*global_plugin_name) );
 
-        QWidget *configDialogWidget = new QWidget( configDialog.data() );
+        QVBoxLayout *configDialogLayout = new QVBoxLayout( configDialog );
+
+        QWidget *configDialogWidget = new QWidget( configDialog );
         QHBoxLayout *configDialogBox = new QHBoxLayout( configDialogWidget );
         QLabel *configDialogSoundFontLabel = new QLabel( i18n("Use SoundFont file:"), configDialogWidget );
         configDialogSoundFontLabel->setToolTip( i18n("In order to convert the midi data to a wave form you need a SoundFont which maps the midi data to sound effects.\nHave a look at %1 in order to get SoundFont files.",QString("http://sourceforge.net/apps/trac/fluidsynth/wiki/SoundFont")) );
         configDialogBox->addWidget( configDialogSoundFontLabel );
-        configDialogSoundFontUrlRequester = new KUrlRequester( configDialogWidget );
-        configDialogSoundFontUrlRequester->setMinimumWidth( 30*fontHeight );
-        configDialogBox->addWidget( configDialogSoundFontUrlRequester );
 
-        configDialog.data()->setMainWidget( configDialogWidget );
-        connect( configDialog.data(), SIGNAL( okClicked() ), this, SLOT( configDialogSave() ) );
+        configDialogSoundFontLineEdit = new QLineEdit( configDialogWidget );
+        configDialogSoundFontLineEdit->setMinimumWidth( 30*fontHeight );
+        configDialogSoundFontLineEdit->setReadOnly( true );
+        configDialogBox->addWidget( configDialogSoundFontLineEdit );
+
+        QPushButton *browseButton = new QPushButton( i18n("Browse..."), configDialogWidget );
+        configDialogBox->addWidget( browseButton );
+
+        connect( browseButton, &QPushButton::clicked, this, [this]() {
+            QString fileName = QFileDialog::getOpenFileName( configDialog, i18n("Select SoundFont File"), QString(), i18n("SoundFont Files (*.sf2 *.sf3)") );
+            if( !fileName.isEmpty() )
+                configDialogSoundFontLineEdit->setText( fileName );
+        } );
+
+        configDialogWidget->setLayout( configDialogBox );
+        configDialogLayout->addWidget( configDialogWidget );
+
+        QDialogButtonBox *buttonBox = new QDialogButtonBox( QDialogButtonBox::Ok | QDialogButtonBox::Cancel );
+        configDialogLayout->addWidget( buttonBox );
+
+        connect( buttonBox, SIGNAL( accepted() ), this, SLOT( configDialogSave() ) );
+        connect( buttonBox, SIGNAL( rejected() ), configDialog, SLOT( reject() ) );
     }
-    configDialogSoundFontUrlRequester->setUrl( soundFontFile );
-    configDialog.data()->show();
+    configDialogSoundFontLineEdit->setText( soundFontFile.toLocalFile() );
+    configDialog->show();
 }
 
 void soundkonverter_codec_fluidsynth::configDialogSave()
 {
-    if( configDialog.data() )
+    if( configDialog )
     {
-        soundFontFile = configDialogSoundFontUrlRequester->url().toLocalFile();
+        soundFontFile = QUrl::fromLocalFile( configDialogSoundFontLineEdit->text() );
 
-        KSharedConfig::Ptr conf = KGlobal::config();
-        KConfigGroup group;
+        QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+        conf.beginGroup("Plugin-" + name());
+        conf.setValue( "soundFontFile", soundFontFile );
 
-        group = conf->group( "Plugin-"+name() );
-        group.writeEntry( "soundFontFile", soundFontFile );
-
-        configDialog.data()->deleteLater();
+        configDialog->deleteLater();
+        configDialog = 0;
     }
 }
 
@@ -133,7 +156,7 @@ CodecWidget *soundkonverter_codec_fluidsynth::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_fluidsynth::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_fluidsynth::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     if( soundFontFile.isEmpty() )
     {
@@ -149,14 +172,12 @@ int soundkonverter_codec_fluidsynth::convert( const KUrl& inputFile, const KUrl&
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -164,7 +185,7 @@ int soundkonverter_codec_fluidsynth::convert( const KUrl& inputFile, const KUrl&
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_fluidsynth::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_fluidsynth::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(_conversionOptions)
@@ -201,6 +222,8 @@ float soundkonverter_codec_fluidsynth::parseOutput( const QString& output )
     return -1;
 }
 
-K_PLUGIN_FACTORY(codec_fluidsynth, registerPlugin<soundkonverter_codec_fluidsynth>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_fluidsynth, "codec_fluidsynth.json")
 
 #include "soundkonverter_codec_fluidsynth.moc"

@@ -1,23 +1,25 @@
 
 #include "codecproblems.h"
 
-#include <KLocale>
-#include <KIcon>
+#include <KLocalizedString>
+#include <QDialogButtonBox>
+#include <QLocale>
+#include <QIcon>
 #include <QLayout>
+#include <QVBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
 
 
-CodecProblems::CodecProblems( Mode mode, const QList<Problem>& problemList, QWidget* parent, Qt::WFlags f )
-    : KDialog( parent, f )
+CodecProblems::CodecProblems( Mode mode, const QList<Problem>& problemList, QWidget* parent, Qt::WindowFlags f )
+    : QDialog( parent )
 {
-    setCaption( i18n("Solutions for backend problems") );
-    setWindowIcon( KIcon("help-about") );
-    setButtons( KDialog::Close );
-    setButtonFocus( KDialog::Close );
+    setWindowTitle( i18n("Solutions for backend problems") );
+    setWindowIcon( QIcon::fromTheme("help-about") );
+
+    QVBoxLayout *mainLayout = new QVBoxLayout( this );
 
     QWidget *widget = new QWidget( this );
-    setMainWidget( widget );
     QVBoxLayout *box = new QVBoxLayout( widget );
 
     QString message;
@@ -73,7 +75,7 @@ CodecProblems::CodecProblems( Mode mode, const QList<Problem>& problemList, QWid
             }
         }
         QLabel *solutionsLabel = new QLabel( messageList.join("\n\n").replace("\n","<br>"), this );
-        solutionsLabel->setMargin( 8 );
+        solutionsLabel->setContentsMargins( 8, 8, 8, 8 );
         solutionsLabel->setWordWrap( true );
         solutionsLabel->setTextInteractionFlags( Qt::TextSelectableByMouse );
 
@@ -81,6 +83,11 @@ CodecProblems::CodecProblems( Mode mode, const QList<Problem>& problemList, QWid
         solutionsScrollArea->setWidget( solutionsLabel );
         box->addWidget( solutionsScrollArea );
     }
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close, this);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    mainLayout->addWidget(widget);
+    mainLayout->addWidget(buttonBox);
 }
 
 CodecProblems::~CodecProblems()

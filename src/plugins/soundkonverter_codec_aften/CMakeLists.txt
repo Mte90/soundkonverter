@@ -6,7 +6,7 @@ set(soundkonverter_codec_aften_SRCS
 )
 
 add_library(soundkonverter_codec_aften MODULE ${soundkonverter_codec_aften_SRCS})
-target_link_libraries(soundkonverter_codec_aften KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_aften KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

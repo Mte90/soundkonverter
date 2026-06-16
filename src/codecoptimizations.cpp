@@ -1,27 +1,28 @@
 
 #include "codecoptimizations.h"
 
-#include <KLocale>
-#include <KIcon>
+#include <KLocalizedString>
+#include <QDialogButtonBox>
+#include <QLocale>
 #include <QLayout>
+#include <QVBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
 #include <QButtonGroup>
 #include <QRadioButton>
+#include <QFrame>
 
 
-CodecOptimizations::CodecOptimizations( const QList<Optimization>& _optimizationList, QWidget* parent, Qt::WFlags f )
-    : KDialog( parent, f ),
+CodecOptimizations::CodecOptimizations( const QList<Optimization>& _optimizationList, QWidget* parent, Qt::WindowFlags f )
+    : QDialog( parent, f ),
     optimizationList( _optimizationList )
 {
-    setCaption( i18n("Solutions for backend problems") );
-    setWindowIcon( KIcon("help-about") );
-    setButtons( KDialog::Ok | KDialog::Cancel );
-    setButtonFocus( KDialog::Cancel );
-    connect( this, SIGNAL(okClicked()), this, SLOT(okClicked()) );
+    setWindowTitle( i18n("Optimize backend settings") );
+    setWindowIcon( QIcon::fromTheme("help-about") );
+
+    QVBoxLayout *mainLayout = new QVBoxLayout( this );
 
     QWidget *widget = new QWidget( this );
-    setMainWidget( widget );
     QVBoxLayout *box = new QVBoxLayout( widget );
 
     QLabel *messageLabel = new QLabel( i18n("You have installed or removed backends and your soundKonverter settings can be optimized."), this );
@@ -78,6 +79,12 @@ CodecOptimizations::CodecOptimizations( const QList<Optimization>& _optimization
         solutionButtonGroup->addButton( solutionIgnore );
         solutionButtonGroup->addButton( solutionFix );
     }
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &CodecOptimizations::okClicked);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    mainLayout->addWidget(widget);
+    mainLayout->addWidget(buttonBox);
 }
 
 CodecOptimizations::~CodecOptimizations()
@@ -94,5 +101,6 @@ void CodecOptimizations::okClicked()
     }
 
     emit solutions( optimizationList );
+    accept();
 }
 

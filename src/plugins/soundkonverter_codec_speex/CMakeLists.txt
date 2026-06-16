@@ -6,7 +6,7 @@ set(soundkonverter_codec_speex_SRCS
 )
 
 add_library(soundkonverter_codec_speex MODULE ${soundkonverter_codec_speex_SRCS})
-target_link_libraries(soundkonverter_codec_speex KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_speex KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

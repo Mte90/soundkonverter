@@ -1,10 +1,13 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "fluidsynthcodecglobal.h"
 
 #include "fluidsynthcodecwidget.h"
 #include "../../core/conversionoptions.h"
 
-#include <KLocale>
+#include <QLocale>
 
 
 FluidsynthCodecWidget::FluidsynthCodecWidget()

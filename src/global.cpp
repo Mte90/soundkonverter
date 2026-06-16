@@ -11,8 +11,8 @@
 //
 #include "global.h"
 
-#include <KLocale>
-#include <KGlobal>
+#include <QLocale>
+#include <klocalizedstring.h>
 
 
 Global::Global()
@@ -27,24 +27,24 @@ QString Global::prettyNumber( double num, QString unit, short digits )
     if( unit == "%" && digits == 3 )
     {
         if( num < 10 )
-            prettyString.sprintf("%.2f %%",num);
+            prettyString = QString::asprintf("%.2f %%",num);
         else if( num < 100 )
-            prettyString.sprintf("%.1f %%",num);
+            prettyString = QString::asprintf("%.1f %%",num);
         else
-            prettyString.sprintf("%.0f %%",num);
+            prettyString = QString::asprintf("%.0f %%",num);
 
-        if( KGlobal::locale()->decimalSymbol() != "." )
-            prettyString.replace(".",KGlobal::locale()->decimalSymbol());
+        if( QLocale::system().decimalPoint() != "." )
+            prettyString.replace(".",QLocale::system().decimalPoint());
     }
     else if( unit == "%" && digits == 2 )
     {
         if( num < 10 )
-            prettyString.sprintf("%.1f %%",num);
+            prettyString = QString::asprintf("%.1f %%",num);
         else
-            prettyString.sprintf("%.0f %%",num);
+            prettyString = QString::asprintf("%.0f %%",num);
 
-        if( KGlobal::locale()->decimalSymbol() != "." )
-            prettyString.replace(".",KGlobal::locale()->decimalSymbol());
+        if( QLocale::system().decimalPoint() != "." )
+            prettyString.replace(".",QLocale::system().decimalPoint());
     }
     else if( unit == "B" )
     {
@@ -82,8 +82,8 @@ QString Global::prettyNumber( double num, QString unit, short digits )
 
         prettyString = prettyString + " " + unit;
 
-        if( KGlobal::locale()->decimalSymbol() != "." )
-            prettyString.replace(".",KGlobal::locale()->decimalSymbol());
+        if( QLocale::system().decimalPoint() != "." )
+            prettyString.replace(".",QLocale::system().decimalPoint());
     }
     else if( unit == "ms" )
     {

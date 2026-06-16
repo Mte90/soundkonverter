@@ -1,4 +1,8 @@
 
+#include <QStandardPaths>
+#include <QSettings>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "lamecodecglobal.h"
 
 #include "soundkonverter_codec_lame.h"
@@ -10,9 +14,11 @@
 #include <QLayout>
 #include <QLabel>
 #include <QCheckBox>
-#include <KLocale>
-#include <KComboBox>
-#include <KDialog>
+#include <QLocale>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include <QComboBox>
 #include <QSpinBox>
 #include <QGroupBox>
 #include <QSlider>
@@ -30,12 +36,10 @@ soundkonverter_codec_lame::soundkonverter_codec_lame( QObject *parent, const QVa
     allCodecs += "mp2";
     allCodecs += "wav";
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-
-    group = conf->group( "Plugin-"+name() );
-    configVersion = group.readEntry( "configVersion", 0 );
-    stereoMode = group.readEntry( "stereoMode", "automatic" );
+    QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+    conf.beginGroup("Plugin-" + name());
+    configVersion = conf.value( "configVersion", 0 ).toInt();
+    stereoMode = conf.value( "stereoMode", "automatic" ).toString();
 }
 
 soundkonverter_codec_lame::~soundkonverter_codec_lame()
@@ -107,51 +111,58 @@ void soundkonverter_codec_lame::showConfigDialog( ActionType action, const QStri
     Q_UNUSED(action)
     Q_UNUSED(codecName)
 
-    if( !configDialog.data() )
+    if( !configDialog )
     {
-        configDialog = new KDialog( parent );
-        configDialog.data()->setCaption( i18n("Configure %1",*global_plugin_name) );
-        configDialog.data()->setButtons( KDialog::Ok | KDialog::Cancel | KDialog::Default );
+        configDialog = new QDialog( parent );
+        configDialog->setWindowTitle( i18n("Configure %1",*global_plugin_name) );
 
-        QWidget *configDialogWidget = new QWidget( configDialog.data() );
+        QVBoxLayout *configDialogLayout = new QVBoxLayout( configDialog );
+
+        QWidget *configDialogWidget = new QWidget( configDialog );
         QHBoxLayout *configDialogBox = new QHBoxLayout( configDialogWidget );
         QLabel *configDialogStereoModeLabel = new QLabel( i18n("Stereo mode:"), configDialogWidget );
         configDialogBox->addWidget( configDialogStereoModeLabel );
-        configDialogStereoModeComboBox = new KComboBox( configDialogWidget );
+        configDialogStereoModeComboBox = new QComboBox( configDialogWidget );
         configDialogStereoModeComboBox->addItem( i18n("Automatic"), "automatic" );
         configDialogStereoModeComboBox->addItem( i18n("Joint Stereo"), "joint stereo" );
         configDialogStereoModeComboBox->addItem( i18n("Simple Stereo"), "simple stereo" );
         configDialogStereoModeComboBox->addItem( i18n("Forced Joint Stereo"), "forced joint stereo" );
         configDialogStereoModeComboBox->addItem( i18n("Dual Mono"), "dual mono" );
         configDialogBox->addWidget( configDialogStereoModeComboBox );
+        configDialogWidget->setLayout( configDialogBox );
+        configDialogLayout->addWidget( configDialogWidget );
 
-        configDialog.data()->setMainWidget( configDialogWidget );
-        connect( configDialog.data(), SIGNAL( okClicked() ), this, SLOT( configDialogSave() ) );
-        connect( configDialog.data(), SIGNAL( defaultClicked() ), this, SLOT( configDialogDefault() ) );
+        QDialogButtonBox *buttonBox = new QDialogButtonBox( QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults );
+        configDialogLayout->addWidget( buttonBox );
+
+        connect( buttonBox, SIGNAL( accepted() ), this, SLOT( configDialogSave() ) );
+        connect( buttonBox, SIGNAL( rejected() ), configDialog, SLOT( reject() ) );
+        connect( buttonBox, &QDialogButtonBox::clicked, this, [this](QAbstractButton *btn) {
+            if( btn->text().contains("Defaults") )
+                configDialogDefault();
+        } );
     }
     configDialogStereoModeComboBox->setCurrentIndex( configDialogStereoModeComboBox->findData(stereoMode) );
-    configDialog.data()->show();
+    configDialog->show();
 }
 
 void soundkonverter_codec_lame::configDialogSave()
 {
-    if( configDialog.data() )
+    if( configDialog )
     {
         stereoMode = configDialogStereoModeComboBox->itemData( configDialogStereoModeComboBox->currentIndex() ).toString();
 
-        KSharedConfig::Ptr conf = KGlobal::config();
-        KConfigGroup group;
+        QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+        conf.beginGroup("Plugin-" + name());
+        conf.setValue( "stereoMode", stereoMode );
 
-        group = conf->group( "Plugin-"+name() );
-        group.writeEntry( "stereoMode", stereoMode );
-
-        configDialog.data()->deleteLater();
+        configDialog->deleteLater();
     }
 }
 
 void soundkonverter_codec_lame::configDialogDefault()
 {
-    if( configDialog.data() )
+    if( configDialog )
     {
         configDialogStereoModeComboBox->setCurrentIndex( configDialogStereoModeComboBox->findData("automatic") );
     }
@@ -164,17 +175,21 @@ bool soundkonverter_codec_lame::hasInfo()
 
 void soundkonverter_codec_lame::showInfo( QWidget *parent )
 {
-    KDialog *dialog = new KDialog( parent );
-    dialog->setCaption( i18n("About %1",*global_plugin_name) );
-    dialog->setButtons( KDialog::Ok );
+    QDialog *dialog = new QDialog( parent );
+    dialog->setWindowTitle( i18n("About %1",*global_plugin_name) );
 
+    QVBoxLayout *layout = new QVBoxLayout( dialog );
     QLabel *widget = new QLabel( dialog );
 
     widget->setText( i18n("LAME is a free high quality MP3 encoder.\nYou can get it at: http://lame.sourceforge.net") );
 
-    dialog->setMainWidget( widget );
+    layout->addWidget( widget );
 
-    dialog->enableButtonApply( false );
+    QDialogButtonBox *buttonBox = new QDialogButtonBox( QDialogButtonBox::Ok );
+    layout->addWidget( buttonBox );
+    connect( buttonBox, SIGNAL( accepted() ), dialog, SLOT( accept() ) );
+
+    dialog->setLayout( layout );
     dialog->show();
 }
 
@@ -184,7 +199,7 @@ CodecWidget *soundkonverter_codec_lame::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_lame::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_lame::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -192,14 +207,12 @@ int soundkonverter_codec_lame::convert( const KUrl& inputFile, const KUrl& outpu
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -207,7 +220,7 @@ int soundkonverter_codec_lame::convert( const KUrl& inputFile, const KUrl& outpu
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_lame::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_lame::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -389,6 +402,8 @@ ConversionOptions *soundkonverter_codec_lame::conversionOptionsFromXml( QDomElem
     return options;
 }
 
-K_PLUGIN_FACTORY(codec_lame, registerPlugin<soundkonverter_codec_lame>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_lame, "codec_lame.json")
 
 #include "soundkonverter_codec_lame.moc"

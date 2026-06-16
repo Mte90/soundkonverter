@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "flacreplaygainglobal.h"
 
 #include "soundkonverter_replaygain_metaflac.h"
@@ -61,15 +64,15 @@ void soundkonverter_replaygain_metaflac::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_replaygain_metaflac::apply( const KUrl::List& fileList, ReplayGainPlugin::ApplyMode mode )
+int soundkonverter_replaygain_metaflac::apply( const QList<QUrl>& fileList, ReplayGainPlugin::ApplyMode mode )
 {
     if( fileList.count() <= 0 )
         return BackendPlugin::UnknownError;
 
     ReplayGainPluginItem *newItem = new ReplayGainPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
@@ -83,14 +86,12 @@ int soundkonverter_replaygain_metaflac::apply( const KUrl::List& fileList, Repla
     {
         command += "--remove-replay-gain";
     }
-    foreach( const KUrl& file, fileList )
+    for(const QUrl& file : fileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -106,6 +107,8 @@ float soundkonverter_replaygain_metaflac::parseOutput( const QString& output )
     return -1;
 }
 
-K_PLUGIN_FACTORY(replaygain_metaflac, registerPlugin<soundkonverter_replaygain_metaflac>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_replaygain_metaflac, "replaygain_metaflac.json")
 
 #include "soundkonverter_replaygain_metaflac.moc"

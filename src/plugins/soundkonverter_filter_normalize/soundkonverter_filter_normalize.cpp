@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "normalizefilterglobal.h"
 
 #include "soundkonverter_filter_normalize.h"
@@ -85,7 +88,7 @@ CodecWidget *soundkonverter_filter_normalize::newCodecWidget()
 return 0;
 }
 
-int soundkonverter_filter_normalize::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_filter_normalize::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -93,14 +96,12 @@ int soundkonverter_filter_normalize::convert( const KUrl& inputFile, const KUrl&
 
     FilterPluginItem *newItem = new FilterPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -108,7 +109,7 @@ int soundkonverter_filter_normalize::convert( const KUrl& inputFile, const KUrl&
     return newItem->id;
 }
 
-QStringList soundkonverter_filter_normalize::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_filter_normalize::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED( inputCodec );
     Q_UNUSED( outputCodec );
@@ -123,7 +124,7 @@ QStringList soundkonverter_filter_normalize::convertCommand( const KUrl& inputFi
 
     QStringList command;
 
-    foreach( const FilterOptions *_filterOptions,_conversionOptions->filterOptions )
+    for(const FilterOptions *_filterOptions : _conversionOptions->filterOptions)
     {
         if( _filterOptions->pluginName == global_plugin_name )
         {
@@ -149,10 +150,10 @@ float soundkonverter_filter_normalize::parseOutput( const QString& output )
 //     // 01-Unknown.wav: 98% complete, ratio=0,479    // encode
 //     // 01-Unknown.wav: 27% complete                 // decode
 //
-//     QRegExp regEnc("(\\d+)% complete");
-//     if( output.contains(regEnc) )
+//     QRegularExpression regEnc("(\\d+)% complete");
+//     if( regEnc.match(output).hasMatch() )
 //     {
-//         return (float)regEnc.cap(1).toInt();
+//         return (float)regEnc.match(output).captured(1).toInt();
 //     }
 //
     return -1;
@@ -165,6 +166,8 @@ FilterOptions *soundkonverter_filter_normalize::filterOptionsFromXml( QDomElemen
     return options;
 }
 
-K_PLUGIN_FACTORY(filter_normalize, registerPlugin<soundkonverter_filter_normalize>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_filter_normalize, "filter_normalize.json")
 
 #include "soundkonverter_filter_normalize.moc"

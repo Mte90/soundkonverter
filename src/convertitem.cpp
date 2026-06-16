@@ -2,8 +2,9 @@
 #include "convertitem.h"
 #include "filelistitem.h"
 
-#include <KStandardDirs>
+#include <QStandardPaths>
 #include <QFile>
+#include <QDir>
 
 
 ConvertItem::ConvertItem( FileListItem *item )
@@ -33,7 +34,7 @@ ConvertItem::ConvertItem( FileListItem *item )
 ConvertItem::~ConvertItem()
 {}
 
-KUrl ConvertItem::generateTempUrl( const QString& trunk, const QString& extension, bool useSharedMemory )
+QUrl ConvertItem::generateTempUrl( const QString& trunk, const QString& extension, bool useSharedMemory )
 {
     QString tempUrl;
     int i=0;
@@ -44,12 +45,12 @@ KUrl ConvertItem::generateTempUrl( const QString& trunk, const QString& extensio
         }
         else
         {
-            tempUrl = KStandardDirs::locateLocal( "tmp", QString("soundkonverter_temp_%1_%2_%3.%4").arg(trunk).arg(logID).arg(i).arg(extension) );
+            tempUrl = QDir::tempPath() + QString("/soundkonverter_temp_%1_%2_%3.%4").arg(trunk).arg(logID).arg(i).arg(extension);
         }
         i++;
-    } while( tempConvertUrls.contains(KUrl(tempUrl)) || QFile::exists(tempUrl) );
+    } while( tempConvertUrls.contains(QUrl::fromLocalFile(tempUrl)) || QFile::exists(tempUrl) );
 
-    return KUrl(tempUrl);
+    return QUrl::fromLocalFile(tempUrl);
 }
 
 void ConvertItem::updateTimes()
@@ -59,7 +60,7 @@ void ConvertItem::updateTimes()
     totalTime += getTime;
     if( conversionPipes.count() > take )
     {
-        foreach( const ConversionPipeTrunk& trunk, conversionPipes.at(take).trunks )
+        for(const ConversionPipeTrunk& trunk : conversionPipes.at(take).trunks)
         {
             float time = 0.0f;
 

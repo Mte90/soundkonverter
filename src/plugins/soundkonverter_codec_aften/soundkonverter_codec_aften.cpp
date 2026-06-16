@@ -1,9 +1,13 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "aftencodecglobal.h"
 
 #include "soundkonverter_codec_aften.h"
 #include "../../core/conversionoptions.h"
 #include "aftencodecwidget.h"
+#include <QRegularExpression>
 
 
 soundkonverter_codec_aften::soundkonverter_codec_aften( QObject *parent, const QVariantList& args  )
@@ -80,7 +84,7 @@ CodecWidget *soundkonverter_codec_aften::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_aften::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_aften::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     const QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -88,14 +92,12 @@ int soundkonverter_codec_aften::convert( const KUrl& inputFile, const KUrl& outp
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -103,7 +105,7 @@ int soundkonverter_codec_aften::convert( const KUrl& inputFile, const KUrl& outp
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_aften::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_aften::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -139,15 +141,18 @@ float soundkonverter_codec_aften::parseOutput( const QString& output )
 {
     // progress:  59% | q: 269.7 | bw: 44.0 | bitrate: 192.0 kbps
 
-    QRegExp reg("progress:\\s+(\\d+)%");
-    if( output.contains(reg) )
+    QRegularExpression reg("progress:\\s+(\\d+)%");
+    QRegularExpressionMatch match = reg.match(output);
+    if( match.hasMatch() )
     {
-        return (float)reg.cap(1).toInt();
+        return (float)match.captured(1).toInt();
     }
 
     return -1;
 }
 
-K_PLUGIN_FACTORY(codec_aften, registerPlugin<soundkonverter_codec_aften>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_aften, "soundkonverter_codec_aften.json")
 
 #include "soundkonverter_codec_aften.moc"

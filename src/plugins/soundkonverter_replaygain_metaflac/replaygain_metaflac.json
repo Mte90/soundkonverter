@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Replaygain Metaflac",
+        "Category": "ReplayGain"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/ReplayGainPlugin"
+    ]
+}

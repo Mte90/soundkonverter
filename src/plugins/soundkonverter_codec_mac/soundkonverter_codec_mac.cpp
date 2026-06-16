@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "maccodecglobal.h"
 
 #include "soundkonverter_codec_mac.h"
@@ -80,7 +83,7 @@ CodecWidget *soundkonverter_codec_mac::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_mac::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_mac::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -115,14 +118,12 @@ int soundkonverter_codec_mac::convert( const KUrl& inputFile, const KUrl& output
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -130,7 +131,7 @@ int soundkonverter_codec_mac::convert( const KUrl& inputFile, const KUrl& output
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_mac::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_mac::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputFile)
     Q_UNUSED(outputFile)
@@ -147,14 +148,16 @@ float soundkonverter_codec_mac::parseOutput( const QString& output )
 {
     // Progress: 55.2% (1.0 seconds remaining, 1.2 seconds total)
 
-    QRegExp regEnc("Progress:\\s+(\\d+.\\d)%");
-    if( output.contains(regEnc) )
+    QRegularExpression regEnc("Progress:\\s+(\\d+.\\d)%");
+    if( regEnc.match(output).hasMatch() )
     {
-        return regEnc.cap(1).toFloat();
+        return regEnc.match(output).captured(1).toFloat();
     }
 
     return -1;
 }
 
-K_PLUGIN_FACTORY(codec_mac, registerPlugin<soundkonverter_codec_mac>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_mac, "codec_mac.json")
 #include "soundkonverter_codec_mac.moc"

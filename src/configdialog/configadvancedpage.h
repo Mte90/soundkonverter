@@ -16,8 +16,8 @@
 
 class Config;
 class QCheckBox;
-class KIntSpinBox;
-class KComboBox;
+class QSpinBox;
+class QComboBox;
 
 /**
 	@author Daniel Faust <hessijames@gmail.com>
@@ -37,22 +37,22 @@ public:
     ~ConfigAdvancedPage();
 
 private:
-    KComboBox *cPreferredOggVorbisExtension;
-    KComboBox *cPreferredVorbisCommentCommentTag;
-    KComboBox *cPreferredVorbisCommentTrackTotalTag;
-    KComboBox *cPreferredVorbisCommentDiscTotalTag;
+    QComboBox *cPreferredOggVorbisExtension;
+    QComboBox *cPreferredVorbisCommentCommentTag;
+    QComboBox *cPreferredVorbisCommentTrackTotalTag;
+    QComboBox *cPreferredVorbisCommentDiscTotalTag;
     QCheckBox *cUseVFATNames;
     QCheckBox *cEjectCdAfterRip;
     QCheckBox *cWriteLogFiles;
     QCheckBox *cUseSharedMemoryForTempFiles;
-    KIntSpinBox *iMaxSizeForSharedMemoryTempFiles;
+    QSpinBox *iMaxSizeForSharedMemoryTempFiles;
     QCheckBox *cUsePipes;
 
     Config *config;
 
 public slots:
-    void resetDefaults();
-    void saveSettings();
+    void resetDefaults() override;
+    void saveSettings() override;
 
 private slots:
     void somethingChanged();

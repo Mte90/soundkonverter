@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "wvreplaygainglobal.h"
 
 #include "soundkonverter_replaygain_wvgain.h"
@@ -61,15 +64,15 @@ void soundkonverter_replaygain_wvgain::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_replaygain_wvgain::apply( const KUrl::List& fileList, ReplayGainPlugin::ApplyMode mode )
+int soundkonverter_replaygain_wvgain::apply( const QList<QUrl>& fileList, ReplayGainPlugin::ApplyMode mode )
 {
     if( fileList.count() <= 0 )
         return BackendPlugin::UnknownError;
 
     ReplayGainPluginItem *newItem = new ReplayGainPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
@@ -88,14 +91,12 @@ int soundkonverter_replaygain_wvgain::apply( const KUrl::List& fileList, ReplayG
     {
         command += "-c";
     }
-    foreach( const KUrl& file, fileList )
+    for(const QUrl& file : fileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -107,15 +108,17 @@ float soundkonverter_replaygain_wvgain::parseOutput( const QString& output )
 {
     // analyzing test.wv,  35% done...
 
-    QRegExp reg("\\s+(\\d+)% done");
-    if( output.contains(reg) )
+    QRegularExpression reg("\\s+(\\d+)% done");
+    if( reg.match(output).hasMatch() )
     {
-        return (float)reg.cap(1).toInt();
+        return (float)reg.match(output).captured(1).toInt();
     }
 
     return -1;
 }
 
-K_PLUGIN_FACTORY(replaygain_wvgain, registerPlugin<soundkonverter_replaygain_wvgain>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_replaygain_wvgain, "replaygain_wvgain.json")
 
 #include "soundkonverter_replaygain_wvgain.moc"

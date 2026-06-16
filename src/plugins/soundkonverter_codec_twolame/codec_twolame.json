@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Twolame",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

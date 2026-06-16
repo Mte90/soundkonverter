@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Libav",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

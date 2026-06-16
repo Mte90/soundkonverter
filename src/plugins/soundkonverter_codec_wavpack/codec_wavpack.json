@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Wavpack",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

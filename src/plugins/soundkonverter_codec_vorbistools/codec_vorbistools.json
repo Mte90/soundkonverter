@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Vorbistools",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

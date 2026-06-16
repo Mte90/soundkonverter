@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Speex",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

@@ -12,7 +12,7 @@
 #ifndef URLOPENER_H
 #define URLOPENER_H
 
-#include <KDialog>
+#include <QDialog>
 
 #include <QUrl>
 
@@ -20,15 +20,15 @@ class Config;
 class Options;
 class QLabel;
 class ConversionOptions;
-class KDialog;
+class QDialog;
 class KFileWidget;
-class KPushButton;
-class KUrlRequester;
+class QPushButton;
+class QLineEdit;
 
 /**
 	@author Daniel Faust <hessijames@gmail.com>
 */
-class UrlOpener : public KDialog
+class UrlOpener : public QDialog
 {
     Q_OBJECT
 public:
@@ -37,7 +37,7 @@ public:
         ConversionOptionsPage
     };
 
-    UrlOpener( Config *_config, QWidget *parent, Qt::WFlags f=0 );
+    UrlOpener( Config *_config, QWidget *parent, Qt::WindowFlags f={} );
     ~UrlOpener();
 
     DialogPage currentPage() { return page; }
@@ -45,15 +45,15 @@ public:
 private:
     Config *config;
 
-    KUrlRequester *urlRequester;
+    QLineEdit *urlRequester;
     Options *options;
     DialogPage page;
     QLabel *lSelector;
     QLabel *lOptions;
     QList<QUrl> urls;
-    KPushButton *pProceed;
-    KPushButton *pAdd;
-    KPushButton *pCancel;
+    QPushButton *pProceed;
+    QPushButton *pAdd;
+    QPushButton *pCancel;
 
 private slots:
     void proceedClickedSlot();

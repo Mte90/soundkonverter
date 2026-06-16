@@ -8,7 +8,7 @@ class QLabel;
 class QSlider;
 class QSpinBox;
 class QCheckBox;
-class KComboBox;
+class QComboBox;
 class KLineEdit;
 
 class FFmpegCodecWidget : public CodecWidget
@@ -29,7 +29,7 @@ private:
     QLabel *lBitrate;
     QSlider *sBitrate;
     QSpinBox *iBitrate;
-    KComboBox *cBitrate;
+    QComboBox *cBitrate;
     QCheckBox *cCmdArguments;
     KLineEdit *lCmdArguments;
 

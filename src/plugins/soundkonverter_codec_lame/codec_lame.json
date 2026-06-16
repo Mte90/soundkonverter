@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Lame",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

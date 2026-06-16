@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Filter Normalize",
+        "Category": "Filter"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/FilterPlugin"
+    ]
+}

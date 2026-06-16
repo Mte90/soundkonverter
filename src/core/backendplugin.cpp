@@ -2,7 +2,8 @@
 #include "backendplugin.h"
 
 #include <QFile>
-#include <KStandardDirs>
+#include <QStandardPaths>
+#include <klocalizedstring.h>
 
 
 BackendPluginItem::BackendPluginItem( QObject *parent )
@@ -406,7 +407,7 @@ void BackendPlugin::scanForBackends( const QStringList& directoryList )
 {
     for( QMap<QString, QString>::Iterator a = binaries.begin(); a != binaries.end(); ++a )
     {
-        a.value() = KStandardDirs::findExe( a.key() );
+        a.value() = QStandardPaths::findExecutable( a.key() );
         if( a.value().isEmpty() )
         {
             for( QList<QString>::const_iterator b = directoryList.begin(); b != directoryList.end(); ++b )
@@ -421,7 +422,7 @@ void BackendPlugin::scanForBackends( const QStringList& directoryList )
     }
 }
 
-QString BackendPlugin::getCodecFromFile( const KUrl& filename, const QString& mimeType, short *rating )
+QString BackendPlugin::getCodecFromFile( const QUrl& filename, const QString& mimeType, short *rating )
 {
     Q_UNUSED(filename)
     Q_UNUSED(mimeType)
@@ -616,10 +617,11 @@ QString BackendPlugin::standardMessage(const QString& type, const QString& argum
 }
 
 /// see http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_03_03.html
-QString BackendPlugin::escapeUrl( const KUrl& url )
+QString BackendPlugin::escapeUrl( const QUrl& url )
 {
     // if no file name is given, assume we are using pipes
-    if( url.isEmpty() )
+    // Qt6: check both isEmpty() and toLocalFile().isEmpty() since QUrl behavior changed
+    if( !url.isLocalFile() || url.toLocalFile().isEmpty() )
         return "-";
 
     return url.toLocalFile().replace("\"","\\\"").replace("$","\\$").replace("`","\\`");

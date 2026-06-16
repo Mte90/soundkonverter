@@ -6,7 +6,7 @@ set(soundkonverter_codec_twolame_SRCS
 )
 
 add_library(soundkonverter_codec_twolame MODULE ${soundkonverter_codec_twolame_SRCS})
-target_link_libraries(soundkonverter_codec_twolame KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_twolame KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

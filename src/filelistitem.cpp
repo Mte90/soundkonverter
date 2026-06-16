@@ -2,6 +2,7 @@
 #include "filelistitem.h"
 
 #include <QPainter>
+#include <QMargins>
 
 
 FileListItem::FileListItem( QTreeWidget *parent, QTreeWidgetItem *after )
@@ -149,9 +150,8 @@ void FileListItemDelegate::paint( QPainter *painter, const QStyleOptionViewItem&
 
     painter->fillRect( option.rect, backgroundColor );
 
-    int m_left, m_top, m_right, m_bottom;
-    item->treeWidget()->getContentsMargins( &m_left, &m_top, &m_right, &m_bottom );
-    //QRect m_rect = QRect( option.rect.x()+m_left, option.rect.y()+m_top, option.rect.width()-m_left-m_right, option.rect.height()-m_top-m_bottom );
+    QMargins margins = item->treeWidget()->contentsMargins();
+    int m_left = margins.left(), m_right = margins.right();
     QRect m_rect = QRect( option.rect.x()+m_left, option.rect.y(), option.rect.width()-m_left-m_right, option.rect.height() );
 
     if( index.column() == 1 || index.column() == 2 )

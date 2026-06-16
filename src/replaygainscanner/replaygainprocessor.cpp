@@ -7,10 +7,11 @@
 #include "replaygainfilelist.h"
 #include "global.h"
 
-#include <KLocale>
+#include <QLocale>
 
 #include <QFile>
 #include <QFileInfo>
+#include <klocalizedstring.h>
 
 
 ReplayGainProcessorItem::ReplayGainProcessorItem( ReplayGainFileListItem *_fileListItem )
@@ -68,14 +69,14 @@ void ReplayGainProcessor::replaygain( ReplayGainProcessorItem *item )
 
     item->backendPlugin = item->replaygainPipes.at(item->take).plugin;
 
-    KUrl::List urlList = item->fileListItem->urls();
+    QList<QUrl> urlList = item->fileListItem->urls();
 
     if( item->backendPlugin->name() == "Vorbis Gain" )
     {
         bool waitForVorbisGainFinish = false;
         QStringList directories = item->fileListItem->directories();
 
-        foreach( const QString& directory, directories )
+        for(const QString& directory : directories)
         {
             if( activeVorbisGainDirectories.contains(directory) )
             {
@@ -150,7 +151,7 @@ void ReplayGainProcessor::pluginProcessFinished( int id, int exitCode )
         return;
     }
 
-    foreach( ReplayGainProcessorItem *item, items )
+    for(ReplayGainProcessorItem *item : items)
     {
         if( item->backendPlugin && item->backendPlugin == QObject::sender() && item->backendID == id )
         {
@@ -158,12 +159,12 @@ void ReplayGainProcessor::pluginProcessFinished( int id, int exitCode )
 
             if( item->backendPlugin->name() == "Vorbis Gain" )
             {
-                foreach( const QString& directory, item->fileListItem->directories() )
+                for(const QString& directory : item->fileListItem->directories())
                 {
                     activeVorbisGainDirectories.removeAll( directory );
                 }
 
-                foreach( ReplayGainProcessorItem *nextItem, items )
+                for(ReplayGainProcessorItem *nextItem : items)
                 {
                     if( nextItem->fileListItem->state == ReplayGainFileListItem::WaitingForReplayGain && nextItem->backendPlugin->name() == "Vorbis Gain" )
                     {
@@ -267,7 +268,7 @@ void ReplayGainProcessor::add( ReplayGainFileListItem* fileListItem, ReplayGainP
     }
     else
     {
-        identifier = config->data.general.replayGainGrouping == Config::Data::General::Directory ? fileListItem->url.pathOrUrl().right(fileListItem->url.pathOrUrl().length()-fileListItem->url.pathOrUrl().lastIndexOf("/")-1) : fileListItem->albumName;
+        identifier = config->data.general.replayGainGrouping == Config::Data::General::Directory ? fileListItem->url.toLocalFile().right(fileListItem->url.toLocalFile().length()-fileListItem->url.toLocalFile().lastIndexOf("/")-1) : fileListItem->albumName;
     }
     logger->log( 1000, i18n("Adding new item to Replay Gain processing list: '%1'",identifier) );
 
@@ -355,7 +356,7 @@ void ReplayGainProcessor::remove( ReplayGainProcessorItem *item, ReplayGainFileL
 
 void ReplayGainProcessor::kill( ReplayGainFileListItem *fileListItem )
 {
-    foreach( ReplayGainProcessorItem *item, items )
+    for(ReplayGainProcessorItem *item : items)
     {
         if( item->fileListItem == fileListItem )
         {
@@ -365,7 +366,7 @@ void ReplayGainProcessor::kill( ReplayGainFileListItem *fileListItem )
             {
                 if( item->backendPlugin && item->backendPlugin->name() == "Vorbis Gain" )
                 {
-                    foreach( const QString& directory, item->fileListItem->directories() )
+                    for(const QString& directory : item->fileListItem->directories())
                     {
                         activeVorbisGainDirectories.removeAll( directory );
                     }
@@ -391,7 +392,7 @@ void ReplayGainProcessor::updateProgress()
     // trigger flushing of the logger cache
     pluginLog( 0, "" );
 
-    foreach( ReplayGainProcessorItem *item, items )
+    for(ReplayGainProcessorItem *item : items)
     {
         float fileProgress = 0.0f;
 

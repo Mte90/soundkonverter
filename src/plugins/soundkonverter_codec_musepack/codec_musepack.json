@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Musepack",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

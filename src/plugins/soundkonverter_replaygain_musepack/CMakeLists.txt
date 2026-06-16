@@ -5,7 +5,7 @@ set(soundkonverter_replaygain_musepackgain_SRCS
 )
 
 add_library(soundkonverter_replaygain_musepackgain MODULE ${soundkonverter_replaygain_musepackgain_SRCS})
-target_link_libraries(soundkonverter_replaygain_musepackgain KF5::WidgetsAddons soundkonvertercore)
+target_link_libraries(soundkonverter_replaygain_musepackgain KF6::WidgetsAddons soundkonvertercore)
 
 ########### install files ###############
 

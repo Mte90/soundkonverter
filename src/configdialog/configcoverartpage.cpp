@@ -1,10 +1,11 @@
 
 #include "configcoverartpage.h"
+#include <KLocalizedString>
 
 #include "../config.h"
 
-#include <KLocale>
-#include <KLineEdit>
+#include <QLocale>
+#include <QLineEdit>
 
 #include <QLayout>
 #include <QLabel>
@@ -66,10 +67,10 @@ ConfigCoverArtPage::ConfigCoverArtPage( Config *_config, QWidget *parent )
     rWriteCoverNameDefault = new QRadioButton( i18n("The default cover file name"), this );
     writeCoversBox->addWidget( rWriteCoverNameDefault );
 
-    QHBoxLayout *writeCoverNameTextBox = new QHBoxLayout( this );
+    QHBoxLayout *writeCoverNameTextBox = new QHBoxLayout();
     lWriteCoverNameDefaultLabel = new QLabel( i18n("Default cover file name:"), this );
     writeCoverNameTextBox->addWidget( lWriteCoverNameDefaultLabel );
-    lWriteCoverNameDefaultEdit = new KLineEdit( this );
+    lWriteCoverNameDefaultEdit = new QLineEdit( this );
     lWriteCoverNameDefaultEdit->setToolTip( i18n("The following strings are wildcards that will be replaced\nby the information in the meta data:\n\n%a - Artist\n%b - Album\n%d - Cover description\n%r - Cover role") );
     writeCoverNameTextBox->addWidget( lWriteCoverNameDefaultEdit );
     writeCoverNameTextBox->addStretch();

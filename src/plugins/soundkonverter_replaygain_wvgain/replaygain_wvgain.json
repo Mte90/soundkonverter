@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Replaygain Wvgain",
+        "Category": "ReplayGain"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/ReplayGainPlugin"
+    ]
+}

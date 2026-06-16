@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "musepackcodecglobal.h"
 
 #include "musepackconversionoptions.h"
@@ -50,8 +53,8 @@ bool MusePackConversionOptions::fromXml( QDomElement conversionOptions, QList<QD
 {
     ConversionOptions::fromXml( conversionOptions, filterOptionsElements );
     QDomElement encodingOptions = conversionOptions.elementsByTagName("encodingOptions").at(0).toElement();
-    QDomElement data = encodingOptions.elementsByTagName("data").at(0).toElement();
-    MusePackConversionOptions::data.preset = (Data::Preset)data.attribute("preset").toInt();
+    QDomElement dataElement = encodingOptions.elementsByTagName("data").at(0).toElement();
+    data.preset = (Data::Preset)dataElement.attribute("preset").toInt();
     return true;
 }
 
@@ -72,7 +75,7 @@ ConversionOptions* MusePackConversionOptions::copy() const
     c->outputFilesystem = outputFilesystem;
     c->replaygain = replaygain;
 
-    foreach( const FilterOptions* f, filterOptions )
+    for(const FilterOptions* f : filterOptions)
     {
         c->filterOptions.append(f->copy());
     }

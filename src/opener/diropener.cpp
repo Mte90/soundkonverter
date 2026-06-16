@@ -10,35 +10,34 @@
 #include <QLabel>
 #include <QDir>
 #include <QCheckBox>
-#include <KLocale>
-#include <KPushButton>
-#include <KFileDialog>
-#include <KIcon>
-#include <KListWidget>
-#include <KUrlRequester>
-#include <KMessageBox>
+#include <QPushButton>
+#include <QListWidget>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QFileDialog>
+#include <klocalizedstring.h>
 
 
-DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f )
-    : KDialog( parent, f ),
+DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WindowFlags f )
+    : QDialog(parent, f ),
     dialogAborted( false ),
     config( _config ),
     mode( _mode )
 {
-    setCaption( i18n("Add folder") );
-    setWindowIcon( KIcon("folder") );
+    setWindowTitle( i18n("Add folder") );
+    setWindowIcon( QIcon::fromTheme("folder") );
 
+    QDialogButtonBox *buttonBox = new QDialogButtonBox( QDialogButtonBox::Ok | QDialogButtonBox::Cancel );
     if( mode == Convert )
     {
-        setButtons( KDialog::User1 | KDialog::Cancel );
+        buttonBox->setStandardButtons( QDialogButtonBox::Ok | QDialogButtonBox::Cancel );
+        buttonBox->button( QDialogButtonBox::Ok )->setText( i18n("Proceed") );
+        buttonBox->button( QDialogButtonBox::Ok )->setIcon( QIcon("go-next") );
     }
-    else if( mode == ReplayGain )
-    {
-        setButtons( KDialog::Ok | KDialog::Cancel );
-    }
-
-    setButtonText( KDialog::User1, i18n("Proceed") );
-    setButtonIcon( KDialog::User1, KIcon("go-next") );
+    connect( buttonBox, SIGNAL(accepted()), this, SLOT(addClicked()) );
+    connect( buttonBox, SIGNAL(rejected()), this, SLOT(cancelClicked()) );
 
     const int fontHeight = QFontMetrics(QApplication::font()).boundingRect("M").size().height();
 
@@ -51,7 +50,7 @@ DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f
     QGridLayout *mainGrid = new QGridLayout( widget );
     QGridLayout *topGrid = new QGridLayout();
     mainGrid->addLayout( topGrid, 0, 0 );
-    setMainWidget( widget );
+    setLayout( new QVBoxLayout( this ) );
 
     lSelector = new QLabel( i18n("1. Select directory"), widget );
     QFont font;
@@ -87,8 +86,14 @@ DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f
     QLabel *labelFilter = new QLabel( i18n("Directory:"), dirOpenerWidget );
     directoryBox->addWidget( labelFilter );
 
-    uDirectory = new KUrlRequester( KUrl("kfiledialog:///soundkonverter-add-media"), dirOpenerWidget );
-    uDirectory->setMode( KFile::Directory | KFile::ExistingOnly | KFile::LocalOnly );
+    uDirectory = new QLineEdit( dirOpenerWidget );
+    QPushButton *browseBtn = new QPushButton( tr("Browse"), dirOpenerWidget );
+    connect( browseBtn, &QPushButton::clicked, this, [this]() {
+        QString dir = QFileDialog::getExistingDirectory( this, tr("Select Directory"), uDirectory->text() );
+        if ( !dir.isEmpty() ) {
+            uDirectory->setText( dir );
+        }
+    });
     directoryBox->addWidget( uDirectory );
 
     QLabel *labelDirectory = new QLabel( i18n("Only add selected file formats:"), dirOpenerWidget );
@@ -98,7 +103,7 @@ DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f
     box->addLayout( fileTypesBox );
 
     QStringList codecList;
-    fileTypes = new KListWidget( dirOpenerWidget );
+    fileTypes = new QListWidget( dirOpenerWidget );
     if( mode == Convert )
     {
         codecList = config->pluginLoader()->formatList( PluginLoader::Decode, PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid) );
@@ -127,11 +132,11 @@ DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f
     fileTypesBox->addLayout( fileTypesButtonsBox );
     fileTypesButtonsBox->addStretch();
 
-    pSelectAll = new KPushButton( KIcon("edit-select-all"), i18n("Select all"), dirOpenerWidget );
+    pSelectAll = new QPushButton( QIcon("edit-select-all"), i18n("Select all"), dirOpenerWidget );
     fileTypesButtonsBox->addWidget( pSelectAll );
     connect( pSelectAll, SIGNAL(clicked()), this, SLOT(selectAllClicked()) );
 
-    pSelectNone = new KPushButton( KIcon("application-x-zerosize"), i18n("Select none"), dirOpenerWidget );
+    pSelectNone = new QPushButton( QIcon("application-x-zerosize"), i18n("Select none"), dirOpenerWidget );
     fileTypesButtonsBox->addWidget( pSelectNone );
     connect( pSelectNone, SIGNAL(clicked()), this, SLOT(selectNoneClicked()) );
 
@@ -151,25 +156,23 @@ DirOpener::DirOpener( Config *_config, Mode _mode, QWidget *parent, Qt::WFlags f
     options->hide();
 
 
-    const KUrl url = KFileDialog::getExistingDirectoryUrl( uDirectory->url(), this );
-    if( !url.isEmpty() )
-        uDirectory->setUrl( url );
+    QString dir = QFileDialog::getExistingDirectory( this, tr("Select Directory"), uDirectory->text() );
+    if( !dir.isEmpty() )
+        uDirectory->setText( dir );
     else
         dialogAborted = true;
 
         // Prevent the dialog from beeing too wide because of the directory history
     if( parent && width() > parent->width() )
-        setInitialSize( QSize(parent->width()-fontHeight,sizeHint().height()) );
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group = conf->group( "DirOpener" );
-    restoreDialogSize( group );
+        resize( parent->width()-fontHeight, sizeHint().height() );
+    QSettings settings( "soundkonverterrc", QSettings::IniFormat );
+    restoreGeometry( settings.value( "DirOpener/geometry" ).toByteArray() );
 }
 
 DirOpener::~DirOpener()
 {
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group = conf->group( "DirOpener" );
-    saveDialogSize( group );
+    QSettings settings( "soundkonverterrc", QSettings::IniFormat );
+    settings.setValue( "DirOpener/geometry", saveGeometry() );
 }
 
 void DirOpener::proceedClicked()
@@ -184,7 +187,6 @@ void DirOpener::proceedClicked()
         lSelector->setFont( font );
         font.setBold( true );
         lOptions->setFont( font );
-        setButtons( KDialog::Ok | KDialog::Cancel );
     }
 }
 
@@ -204,18 +206,18 @@ void DirOpener::addClicked()
         {
             hide();
 
-            emit openFiles( uDirectory->url(), cRecursive->checkState() == Qt::Checked, selectedCodecs, conversionOptions );
+            emit openFiles( QUrl::fromLocalFile( uDirectory->text() ), cRecursive->checkState() == Qt::Checked, selectedCodecs, conversionOptions );
             accept();
         }
         else
         {
-            KMessageBox::error( this, i18n("No conversion options selected.") );
+            QMessageBox::critical( this, tr("Error"), i18n("No conversion options selected.") );
         }
     }
     else if( mode == ReplayGain )
     {
         hide();
-        emit openFiles( uDirectory->url(), cRecursive->checkState() == Qt::Checked, selectedCodecs );
+        emit openFiles( QUrl::fromLocalFile( uDirectory->text() ), cRecursive->checkState() == Qt::Checked, selectedCodecs );
         accept();
     }
 }

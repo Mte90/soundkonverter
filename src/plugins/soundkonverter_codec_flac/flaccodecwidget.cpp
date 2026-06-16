@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "flaccodecglobal.h"
 
 #include "flaccodecwidget.h"
@@ -8,7 +11,7 @@
 
 #include <QLayout>
 #include <QLabel>
-#include <KLocale>
+#include <QLocale>
 #include <QSpinBox>
 #include <QSlider>
 

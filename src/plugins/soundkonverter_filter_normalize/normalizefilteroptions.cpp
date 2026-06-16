@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "normalizefilterglobal.h"
 
 #include "normalizefilteroptions.h"

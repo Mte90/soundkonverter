@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Ffmpeg",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

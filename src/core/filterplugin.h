@@ -39,7 +39,7 @@ public:
     explicit FilterPlugin( QObject *parent );
     virtual ~FilterPlugin();
 
-    virtual QString type() const;
+    QString type() const override;
 
     virtual FilterWidget *newFilterWidget() = 0;
     virtual FilterWidget *deleteFilterWidget( FilterWidget *filterWidget );
@@ -50,9 +50,9 @@ public:
 //      * -1   unknown error
 //      * -100 plugin not configured
 //      */
-//     virtual int filter( const KUrl& inputFile, const KUrl& outputFile, FilterOptions *_filterOptions ) = 0;
+//     virtual int filter( const QUrl& inputFile, const QUrl& outputFile, FilterOptions *_filterOptions ) = 0;
 //     /** returns a command for converting a file through a pipe; "" if pipes aren't supported */
-//     virtual QStringList filterCommand( const KUrl& inputFile, const KUrl& outputFile, FilterOptions *_filterOptions ) = 0;
+//     virtual QStringList filterCommand( const QUrl& inputFile, const QUrl& outputFile, FilterOptions *_filterOptions ) = 0;
 
     virtual FilterOptions *filterOptionsFromXml( QDomElement filterOptions );
 

@@ -7,7 +7,7 @@ set(soundkonverter_filter_normalize_SRCS
 )
 
 add_library(soundkonverter_filter_normalize MODULE ${soundkonverter_filter_normalize_SRCS})
-target_link_libraries(soundkonverter_filter_normalize KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_filter_normalize KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

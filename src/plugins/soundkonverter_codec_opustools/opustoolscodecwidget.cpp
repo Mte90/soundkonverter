@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "opustoolscodecglobal.h"
 
 #include "opustoolscodecwidget.h"
@@ -8,8 +11,8 @@
 #include <math.h>
 
 #include <QApplication>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <QLayout>
 #include <QBoxLayout>
 #include <QLabel>
@@ -54,7 +57,7 @@ OpusToolsCodecWidget::OpusToolsCodecWidget()
 
     QLabel *lBitrateMode = new QLabel( i18n("Bitrate mode:"), this );
     topBox->addWidget( lBitrateMode );
-    cBitrateMode = new KComboBox( this );
+    cBitrateMode = new QComboBox( this );
     cBitrateMode->addItem( i18n("Average") );
     cBitrateMode->addItem( i18n("Constant") );
     cBitrateMode->setCurrentIndex( 0 );

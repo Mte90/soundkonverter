@@ -6,7 +6,7 @@
 
 #include <QWidget>
 
-#include <KGenericFactory>
+
 #include <QDomDocument>
 
 class FilterOptions;

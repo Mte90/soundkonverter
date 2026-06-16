@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "twolamecodecglobal.h"
 
 #include "twolamecodecwidget.h"
@@ -8,8 +11,8 @@
 #include <QLayout>
 #include <QLabel>
 #include <QCheckBox>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <QSpinBox>
 // #include <QSlider>
 
@@ -32,7 +35,7 @@ TwoLameCodecWidget::TwoLameCodecWidget()
     QLabel *lMode = new QLabel( i18n("Mode:"), this );
     topBox->addWidget( lMode );
 
-    cMode = new KComboBox( this );
+    cMode = new QComboBox( this );
     cMode->addItem( i18n("Quality") );
     cMode->addItem( i18n("Bitrate") );
     connect( cMode, SIGNAL(activated(int)), this, SLOT(modeChanged(int)) );

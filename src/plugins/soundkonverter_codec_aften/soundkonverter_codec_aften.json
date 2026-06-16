@@ -1,0 +1,10 @@
+{
+    "KPlugin": {
+        "Name": "Aften Encoder",
+        "Description": "Aften AC3 encoder plugin for soundKonverter",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

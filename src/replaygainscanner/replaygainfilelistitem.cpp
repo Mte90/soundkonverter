@@ -2,6 +2,9 @@
 #include "replaygainfilelistitem.h"
 // #include <QResizeEvent> // NOTE needed by drag'n'drop events - but why?
 #include <QPainter>
+#include <QFileInfo>
+#include <QUrl>
+#include <QDir>
 
 
 ReplayGainFileListItem::ReplayGainFileListItem( QTreeWidget *parent )
@@ -52,22 +55,22 @@ QStringList ReplayGainFileListItem::directories()
 
     if( type == ReplayGainFileListItem::Track )
     {
-        directories.append( url.directory() );
+        directories.append( QFileInfo(url.toLocalFile()).dir().path() );
     }
     else
     {
         for( int j=0; j<childCount(); j++ )
         {
-            directories.append( static_cast<ReplayGainFileListItem*>(child(j))->url.directory() );
+            directories.append( QFileInfo(static_cast<ReplayGainFileListItem*>(child(j))->url.toLocalFile()).dir().path() );
         }
     }
 
     return directories;
 }
 
-KUrl::List ReplayGainFileListItem::urls()
+QList<QUrl> ReplayGainFileListItem::urls()
 {
-    KUrl::List urls;
+    QList<QUrl> urls;
 
     if( type == ReplayGainFileListItem::Track )
     {
@@ -208,7 +211,11 @@ void ReplayGainFileListItemDelegate::paint( QPainter *painter, const QStyleOptio
     painter->fillRect( option.rect, backgroundColor );
 
     int m_left, m_top, m_right, m_bottom;
-    item->treeWidget()->getContentsMargins( &m_left, &m_top, &m_right, &m_bottom );
+    QMargins margins = item->treeWidget()->contentsMargins();
+    m_left = margins.left();
+    m_top = margins.top();
+    m_right = margins.right();
+    m_bottom = margins.bottom();
 
     QRect m_rect = QRect( option.rect.x()+m_left, option.rect.y(), option.rect.width()-m_left-m_right, option.rect.height() );
 

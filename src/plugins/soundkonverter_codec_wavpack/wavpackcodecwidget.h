@@ -4,7 +4,7 @@
 
 #include "../../core/codecwidget.h"
 
-class KComboBox;
+class QComboBox;
 class QCheckBox;
 class KLineEdit;
 
@@ -23,7 +23,7 @@ public:
     int currentDataRate();
 
 private:
-    KComboBox *cCompressionLevel;
+    QComboBox *cCompressionLevel;
     QCheckBox *cCmdArguments;
     KLineEdit *lCmdArguments;
 

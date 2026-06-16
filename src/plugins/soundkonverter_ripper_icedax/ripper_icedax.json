@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Ripper Icedax",
+        "Category": "Ripper"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/RipperPlugin"
+    ]
+}

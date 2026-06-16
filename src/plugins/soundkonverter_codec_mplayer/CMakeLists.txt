@@ -5,7 +5,7 @@ set(soundkonverter_codec_mplayer_SRCS
 )
 
 add_library(soundkonverter_codec_mplayer MODULE ${soundkonverter_codec_mplayer_SRCS})
-target_link_libraries(soundkonverter_codec_mplayer KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_mplayer KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

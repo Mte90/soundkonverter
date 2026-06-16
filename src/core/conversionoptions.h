@@ -4,10 +4,11 @@
 
 #include <kcoreaddons_export.h>
 
-#include <KGenericFactory>
+
 
 #include <QString>
 #include <QDomElement>
+#include <QList>
 
 
 /**

@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "lamecodecglobal.h"
 
 #include "lamecodecwidget.h"
@@ -9,8 +12,8 @@
 #include <QBoxLayout>
 #include <QLabel>
 #include <QCheckBox>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <QSpinBox>
 
 #include <KLineEdit>
@@ -32,14 +35,14 @@ LameCodecWidget::LameCodecWidget()
 
     QLabel *lPreset = new QLabel( i18n("Preset:"), this );
     presetBox->addWidget( lPreset );
-    cPreset = new KComboBox( this );
+    cPreset = new QComboBox( this );
     cPreset->addItem( i18nc("Backend profile","Medium") );
     cPreset->addItem( i18nc("Backend profile","Standard") );
     cPreset->addItem( i18nc("Backend profile","Extreme") );
     cPreset->addItem( i18nc("Backend profile","Insane") );
     cPreset->addItem( i18n("Specify bitrate") );
     cPreset->addItem( i18n("User defined") );
-    connect( cPreset, SIGNAL(activated(const QString&)), this, SLOT(presetChanged(const QString&)) );
+    connect( cPreset, SIGNAL(textActivated(const QString&)), this, SLOT(presetChanged(const QString&)) );
     connect( cPreset, SIGNAL(activated(int)), SIGNAL(optionsChanged()) );
     presetBox->addWidget( cPreset );
 //     cPreset->setToolTip( i18n("Either use one of lames's presets or your own settings.") );
@@ -82,7 +85,7 @@ LameCodecWidget::LameCodecWidget()
     QLabel *lMode = new QLabel( i18n("Mode:"), userdefinedBox );
     userdefinedTopBox->addWidget( lMode );
 
-    cMode = new KComboBox( userdefinedBox );
+    cMode = new QComboBox( userdefinedBox );
     cMode->addItem( i18n("Quality") );
     cMode->addItem( i18n("Bitrate") );
     connect( cMode, SIGNAL(activated(int)), this, SLOT(modeChanged(int)) );
@@ -107,7 +110,7 @@ LameCodecWidget::LameCodecWidget()
 
     QLabel *lBitrateMode = new QLabel( i18n("Bitrate mode:"), this );
     userdefinedTopBox->addWidget( lBitrateMode );
-    cBitrateMode = new KComboBox( this );
+    cBitrateMode = new QComboBox( this );
     cBitrateMode->addItem( i18n("Variable") );
     cBitrateMode->addItem( i18n("Average") );
     cBitrateMode->addItem( i18n("Constant") );

@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "musepackcodecglobal.h"
 
 #include "musepackcodecwidget.h"
@@ -7,8 +10,8 @@
 #include <math.h>
 
 #include <QApplication>
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <KLineEdit>
 #include <QLayout>
 #include <QLabel>
@@ -34,7 +37,7 @@ MusePackCodecWidget::MusePackCodecWidget()
 
     QLabel *lPreset = new QLabel( i18n("Preset:"), this );
     presetBox->addWidget( lPreset );
-    cPreset = new KComboBox( this );
+    cPreset = new QComboBox( this );
     cPreset->addItem( i18nc("Backend profile","Telephone") );
     cPreset->addItem( i18nc("Backend profile","Thumb") );
     cPreset->addItem( i18nc("Backend profile","Radio") );
@@ -45,7 +48,7 @@ MusePackCodecWidget::MusePackCodecWidget()
     cPreset->addItem( i18n("User defined") );
     cPreset->setCurrentIndex( 3 );
     cPreset->setToolTip( i18n("Either use one of MusePacks's presets or your own settings.") );
-    connect( cPreset, SIGNAL(activated(const QString&)), this, SLOT(presetChanged(const QString&)) );
+    connect( cPreset, SIGNAL(textActivated(const QString&)), this, SLOT(presetChanged(const QString&)) );
     connect( cPreset, SIGNAL(activated(int)), SIGNAL(optionsChanged()) );
     presetBox->addWidget( cPreset );
 

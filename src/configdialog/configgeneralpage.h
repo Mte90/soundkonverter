@@ -16,10 +16,9 @@
 
 class Config;
 class QCheckBox;
-class KComboBox;
-class KIntSpinBox;
-class KLineEdit;
-class KPushButton;
+class QComboBox;
+class QLineEdit;
+class QSpinBox;
 
 /**
 	@author Daniel Faust <hessijames@gmail.com>
@@ -35,17 +34,17 @@ public:
     ~ConfigGeneralPage();
 
 private:
-    KComboBox *cStartTab;
-    KComboBox *cDefaultProfile;
-    KComboBox *cDefaultFormat;
-//     KComboBox *cPriority;
+    QComboBox *cStartTab;
+    QComboBox *cDefaultProfile;
+    QComboBox *cDefaultFormat;
+//     QComboBox *cPriority;
 //     QStringList sPriority;
-    KComboBox *cConflictHandling;
-    KIntSpinBox *iNumFiles;
+    QComboBox *cConflictHandling;
+    QSpinBox *iNumFiles;
     QCheckBox *cWaitForAlbumGain;
     QCheckBox *cCopyIfSameCodec;
-    KComboBox *cReplayGainGrouping;
-    KIntSpinBox *iNumReplayGainFiles;
+    QComboBox *cReplayGainGrouping;
+    QSpinBox *iNumReplayGainFiles;
 
     Config *config;
 
@@ -53,8 +52,8 @@ private:
 //     int formatIndex( const QString& string );
 
 public slots:
-    void resetDefaults();
-    void saveSettings();
+    void resetDefaults() override;
+    void saveSettings() override;
 
 private slots:
     void somethingChanged();

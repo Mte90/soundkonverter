@@ -1,14 +1,14 @@
 
 #include "logger.h"
 
-#include <KLocale>
-#include <KStandardDirs>
-#include <KConfigGroup>
+#include <QLocale>
+#include <QStandardPaths>
 
 #include <cstdlib>
 #include <ctime>
 
-#include <KGlobal>
+#include <QSettings>
+#include <KLocalizedString>
 
 
 #define MAX_LOGS  20
@@ -19,7 +19,7 @@ LoggerItem::LoggerItem( int logId, const QString& logIdentifier )
 {
     id = logId;
     identifier = logIdentifier;
-    file.setFileName( KStandardDirs::locateLocal("data",QString("soundkonverter/log/%1.log").arg(id)) );
+    file.setFileName( QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QString("/soundkonverter/log/%1.log").arg(id) );
     completed = false;
     succeeded = false;
 }
@@ -37,10 +37,10 @@ LoggerItem::~LoggerItem()
 Logger::Logger( QObject *parent)
     : QObject( parent )
 {
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-    group = conf->group( "General" );
-    writeLogFiles = group.readEntry( "writeLogFiles", false );
+    QSettings settings("soundkonverterrc", QSettings::IniFormat);
+    settings.beginGroup( "General" );
+    writeLogFiles = settings.value( "writeLogFiles", false ).toBool();
+    settings.endGroup();
 
     LoggerItem *item = new LoggerItem( 1000, "soundKonverter" );
     item->completed = true;
@@ -125,7 +125,7 @@ QList< QPair<int, QString> > Logger::getLogs() const
 {
     QList< QPair<int, QString> > logs;
 
-    foreach( LoggerItem* process, processes )
+    for(LoggerItem* process : processes)
     {
         logs << QPair<int, QString>(process->id, process->identifier);
     }
@@ -158,7 +158,7 @@ void Logger::processCompleted( int id, bool succeeded, bool waitingForAlbumGain 
         QTime time = QTime::currentTime();
 
         int removeId = -1;
-        foreach( const LoggerItem* process, processes.values() )
+        for(const LoggerItem* process : processes.values())
         {
             if( process->time < time && process->completed && process->succeeded && process->id != 1000 )
             {

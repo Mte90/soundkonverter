@@ -4,12 +4,13 @@
 
 #include "../../core/codecplugin.h"
 
-#include <KUrl>
-#include <QWeakPointer>
+#include <QLineEdit>
+#include <QWidget>
+#include <QUrl>
+#include <QPointer>
 
 class ConversionOptions;
-class KDialog;
-class KUrlRequester;
+class QDialog;
 
 
 class soundkonverter_codec_fluidsynth : public CodecPlugin
@@ -31,13 +32,13 @@ public:
     void showInfo( QWidget *parent );
     CodecWidget *newCodecWidget();
 
-    int convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    QStringList convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
+    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
+    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
     float parseOutput( const QString& output );
 
 private:
-    QWeakPointer<KDialog> configDialog;
-    KUrlRequester *configDialogSoundFontUrlRequester;
+    QPointer<QDialog> configDialog;
+    QLineEdit *configDialogSoundFontLineEdit;
 
     QUrl soundFontFile;
 

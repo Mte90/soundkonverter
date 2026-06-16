@@ -1,11 +1,15 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
+#include <KLocalizedString>
 #include "aftencodecglobal.h"
 
 #include "aftencodecwidget.h"
 #include "../../core/conversionoptions.h"
 
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <QLayout>
 #include <QLabel>
 #include <QSpinBox>
@@ -26,7 +30,7 @@ AftenCodecWidget::AftenCodecWidget()
 
     QLabel *lMode = new QLabel( i18n("Mode:"), this );
     topBox->addWidget( lMode );
-    cMode = new KComboBox( this );
+    cMode = new QComboBox( this );
     cMode->addItem( i18n("Quality") );
     cMode->addItem( i18n("Bitrate") );
     connect( cMode, SIGNAL(activated(int)), this, SLOT(modeChanged(int)) );
@@ -51,7 +55,7 @@ AftenCodecWidget::AftenCodecWidget()
     topBox->addWidget( dQuality );
     dQuality->setToolTip( i18n("Quality level from %1 to %2 where %2 is the highest quality.\nThe higher the quality, the bigger the file size and vice versa.", 0, 1023) );
 
-    cBitrate = new KComboBox( this );
+    cBitrate = new QComboBox( this );
     cBitrate->addItem( "32 kbps" );
     cBitrate->addItem( "40 kbps" );
     cBitrate->addItem( "48 kbps" );

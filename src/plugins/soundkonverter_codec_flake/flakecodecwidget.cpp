@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "flakecodecglobal.h"
 
 #include "flakecodecwidget.h"
@@ -12,7 +15,7 @@
 #include <QSlider>
 #include <QCheckBox>
 #include <KLineEdit>
-#include <KLocale>
+#include <QLocale>
 
 
 FlakeCodecWidget::FlakeCodecWidget()

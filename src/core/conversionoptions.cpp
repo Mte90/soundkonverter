@@ -100,14 +100,14 @@ bool ConversionOptions::equalsFilters( ConversionOptions *_other )
         return false;
 
     QStringList filters;
-    foreach( FilterOptions *filter, filterOptions )
+    for(FilterOptions *filter : filterOptions)
     {
         filters.append( filter->pluginName );
     }
     filters.sort();
 
     QStringList other_filters;
-    foreach( FilterOptions *otherFilter, _other->filterOptions )
+    for(FilterOptions *otherFilter : _other->filterOptions)
     {
         other_filters.append( otherFilter->pluginName );
     }
@@ -115,9 +115,9 @@ bool ConversionOptions::equalsFilters( ConversionOptions *_other )
 
     if( filters == other_filters )
     {
-        foreach( FilterOptions *filter, filterOptions )
+        for(FilterOptions *filter : filterOptions)
         {
-            foreach( FilterOptions *otherFilter, _other->filterOptions )
+            for(FilterOptions *otherFilter : _other->filterOptions)
             {
                 if( otherFilter->pluginName == filter->pluginName )
                 {
@@ -174,7 +174,7 @@ QDomElement ConversionOptions::toXml( QDomDocument document ) const
     conversionOptions.appendChild(features);
 
     int i = 0;
-    foreach( const FilterOptions *filter, filterOptions )
+    for(const FilterOptions *filter : filterOptions)
     {
         QDomElement filterOptionsElement = filter->toXml(document,"filterOptions"+QString::number(i++));
         conversionOptions.appendChild(filterOptionsElement);
@@ -231,7 +231,7 @@ ConversionOptions* ConversionOptions::copy() const
     c->outputFilesystem = outputFilesystem;
     c->replaygain = replaygain;
 
-    foreach( const FilterOptions* f, filterOptions )
+    for(const FilterOptions* f : filterOptions)
     {
         c->filterOptions.append(f->copy());
     }

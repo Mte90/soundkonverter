@@ -5,7 +5,7 @@ set(soundkonverter_ripper_cdparanoia_SRCS
 )
 
 add_library(soundkonverter_ripper_cdparanoia MODULE ${soundkonverter_ripper_cdparanoia_SRCS})
-target_link_libraries(soundkonverter_ripper_cdparanoia KF5::WidgetsAddons soundkonvertercore)
+target_link_libraries(soundkonverter_ripper_cdparanoia KF6::WidgetsAddons soundkonvertercore)
 
 ########### install files ###############
 

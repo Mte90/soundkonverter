@@ -1,10 +1,13 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "timiditycodecglobal.h"
 
 #include "timiditycodecwidget.h"
 #include "../../core/conversionoptions.h"
 
-#include <KLocale>
+#include <QLocale>
 
 
 TimidityCodecWidget::TimidityCodecWidget()

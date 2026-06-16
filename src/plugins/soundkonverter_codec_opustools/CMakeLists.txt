@@ -7,7 +7,7 @@ set(soundkonverter_codec_opustools_SRCS
 )
 
 add_library(soundkonverter_codec_opustools MODULE ${soundkonverter_codec_opustools_SRCS})
-target_link_libraries(soundkonverter_codec_opustools KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_opustools KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

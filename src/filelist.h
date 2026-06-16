@@ -6,7 +6,7 @@
 #include <QTreeWidget>
 #include "filelistitem.h"
 
-#include <QTime>
+#include <QElapsedTimer>
 // #include <QDebug>
 
 class FileListItem;
@@ -18,7 +18,7 @@ class OptionsLayer;
 class ConversionOptions;
 
 class QMenu;
-class KAction;
+class QAction;
 class QProgressBar;
 
 /**
@@ -62,7 +62,7 @@ private:
     /** A progressbar, that is shown, when a directory is added recursive */
     QProgressBar *pScanStatus;
     /** Update timer for the scan status */
-    QTime tScanStatus;
+    QElapsedTimer tScanStatus;
 
 // debug
 //     int TimeCount;
@@ -77,10 +77,10 @@ private:
 
     QList<FileListItem*> selectedFiles;
 
-    void dragEnterEvent( QDragEnterEvent *event );
-    void dropEvent( QDropEvent *event );
+    void dragEnterEvent( QDragEnterEvent *event ) override;
+    void dropEvent( QDropEvent *event ) override;
 
-    void resizeEvent( QResizeEvent *event );
+    void resizeEvent( QResizeEvent *event ) override;
 
     bool queue;
 
@@ -91,11 +91,11 @@ private:
     OptionsLayer *optionsLayer;
 
     QMenu *contextMenu;
-    KAction *editAction;
-    KAction *startAction;
-    KAction *stopAction;
-    KAction *removeAction;
-//     KAction* paste;
+    QAction *editAction;
+    QAction *startAction;
+    QAction *stopAction;
+    QAction *removeAction;
+//     QAction** paste;
 
 private slots:
     void showContextMenu( const QPoint& point );

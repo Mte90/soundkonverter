@@ -1,45 +1,55 @@
-
 #include "soundkonverterapp.h"
 #include "soundkonverter.h"
 
-#include <KCmdLineArgs>
-#include <KStandardDirs>
-#include <KUrl>
+#include <QStandardPaths>
+#include <KLocalizedString>
 #include <QFile>
+#include <QCommandLineOption>
 
-
-soundKonverterApp::soundKonverterApp()
-    : KUniqueApplication()
+soundKonverterApp::soundKonverterApp(int &argc, char **argv)
+    : QApplication(argc, argv)
 {
     mainWindow = new soundKonverter();
-    setActiveWindow( mainWindow );
+    setActiveWindow(mainWindow);
 }
 
 soundKonverterApp::~soundKonverterApp()
 {}
 
-int soundKonverterApp::newInstance()
+void soundKonverterApp::addCmdLineOptions(QCommandLineParser &parser)
 {
-    KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
+    QStringList autostartNames;
+    autostartNames << QStringLiteral("autostart");
+    QCommandLineOption autostartOption(autostartNames, i18n("Start the conversion immediately (enabled when using '--invisible')"), "autostart");
+    parser.addOption(autostartOption);
+
+    QStringList autocloseNames;
+    autocloseNames << QStringLiteral("autoclose");
+    QCommandLineOption autocloseOption(autocloseNames, i18n("Close soundKonverter after all files are converted (enabled when using '--invisible')"), "autoclose");
+    parser.addOption(autocloseOption);
+}
+
+int soundKonverterApp::newInstance(QCommandLineParser &parser)
+{
     static bool first = true;
     bool visible = true;
     bool autoclose = false;
     bool autostart = false;
     bool activateMainWindow = true;
-    
-    if( ( first || !mainWindow->isVisible() ) && args->isSet("replaygain") && args->count() > 0 )
+
+    if ((first || !mainWindow->isVisible()) && parser.isSet("replaygain") && parser.positionalArguments().count() > 0)
         visible = false;
 
-    autoclose = args->isSet( "autoclose" );
-    autostart = args->isSet( "autostart" );
+    autoclose = parser.isSet("autoclose");
+    autostart = parser.isSet("autostart");
 
-    const QString profile = args->getOption( "profile" );
-    const QString format = args->getOption( "format" );
-    const QString directory = args->getOption( "output" );
-    const QString notifyCommand = args->getOption( "command" );
-    const QString fileListPath = args->getOption( "file-list" );
+    const QString profile = parser.value("profile");
+    const QString format = parser.value("format");
+    const QString directory = parser.value("output");
+    const QString notifyCommand = parser.value("command");
+    const QString fileListPath = parser.value("file-list");
 
-    if( args->isSet( "invisible" ) )
+    if (parser.isSet("invisible"))
     {
         autoclose = true;
         autostart = true;
@@ -47,9 +57,9 @@ int soundKonverterApp::newInstance()
         mainWindow->showSystemTray();
     }
 
-    if( first && fileListPath.isEmpty() && QFile::exists(KStandardDirs::locateLocal("data","soundkonverter/filelist_autosave.xml")) )
+    if (first && fileListPath.isEmpty() && QFile::exists(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/soundkonverter/filelist_autosave.xml"))
     {
-        if( !visible )
+        if (!visible)
         {
             visible = true;
             autoclose = false;
@@ -57,66 +67,52 @@ int soundKonverterApp::newInstance()
             mainWindow->show();
         }
         mainWindow->show();
-        kapp->processEvents();
         mainWindow->loadAutosaveFileList();
     }
-    else if( !fileListPath.isEmpty() && QFile::exists(fileListPath) )
+    else if (!fileListPath.isEmpty() && QFile::exists(fileListPath))
     {
         mainWindow->loadFileList(fileListPath);
     }
 
-    const QString device = args->getOption( "rip" );
-    if( !device.isEmpty() )
+    const QString device = parser.value("rip");
+    if (!device.isEmpty())
     {
-        const bool success = mainWindow->ripCd( device, profile, format, directory, notifyCommand );
-        if( !success && first )
+        const bool success = mainWindow->ripCd(device, profile, format, directory, notifyCommand);
+        if (!success && first)
         {
-            kapp->quit();
+            quit();
             return 0;
         }
     }
 
-    if( visible )
+    if (visible)
         mainWindow->show();
 
-    mainWindow->setAutoClose( autoclose );
+    mainWindow->setAutoClose(autoclose);
 
-    if( args->isSet( "replaygain" ) )
+    if (parser.isSet("replaygain"))
     {
-        KUrl::List urls;
-        for( int i=0; i<args->count(); i++ )
+        QStringList urls = parser.positionalArguments();
+        if (!urls.isEmpty())
         {
-            urls.append( args->arg(i) );
-        }
-        if( !urls.isEmpty() )
-        {
-            mainWindow->addReplayGainFiles( urls );
+            mainWindow->addReplayGainFiles(urls);
             activateMainWindow = false;
         }
     }
     else
     {
-        KUrl::List urls;
-        for( int i=0; i<args->count(); i++ )
-        {
-            urls.append( args->arg(i) );
-        }
-        if( !urls.isEmpty() )
-            mainWindow->addConvertFiles( urls, profile, format, directory, notifyCommand );
+        QStringList urls = parser.positionalArguments();
+        if (!urls.isEmpty())
+            mainWindow->addConvertFiles(urls, profile, format, directory, notifyCommand);
     }
-    args->clear();
-
-    if( activateMainWindow )
-        mainWindow->activateWindow();
-
-    if( autostart )
-        mainWindow->startConversion();
-
-    if( first )
-        mainWindow->startupChecks();
 
     first = false;
 
+    if (activateMainWindow)
+        mainWindow->activateWindow();
+
+    if (autostart)
+        mainWindow->startConversion();
+
     return 0;
 }
-

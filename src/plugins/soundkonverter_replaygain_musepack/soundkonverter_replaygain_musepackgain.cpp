@@ -1,9 +1,12 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "musepackreplaygainglobal.h"
 
 #include "soundkonverter_replaygain_musepackgain.h"
 
-#include <KStandardDirs>
+#include <QStandardPaths>
 #include <QFile>
 
 
@@ -64,7 +67,7 @@ void soundkonverter_replaygain_musepackgain::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_replaygain_musepackgain::apply( const KUrl::List& fileList, ReplayGainPlugin::ApplyMode mode )
+int soundkonverter_replaygain_musepackgain::apply( const QList<QUrl>& fileList, ReplayGainPlugin::ApplyMode mode )
 {
     if( fileList.count() <= 0 )
         return BackendPlugin::UnknownError;
@@ -74,21 +77,19 @@ int soundkonverter_replaygain_musepackgain::apply( const KUrl::List& fileList, R
 
     ReplayGainPluginItem *newItem = new ReplayGainPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
     QStringList command;
     command += binaries["mpcgain"];
-    foreach( const KUrl& file, fileList )
+    for(const QUrl& file : fileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -105,6 +106,8 @@ float soundkonverter_replaygain_musepackgain::parseOutput( const QString& output
     return -1;
 }
 
-K_PLUGIN_FACTORY(replaygain_musepackgain, registerPlugin<soundkonverter_replaygain_musepackgain>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_replaygain_musepackgain, "replaygain_musepackgain.json")
 
 #include "soundkonverter_replaygain_musepackgain.moc"

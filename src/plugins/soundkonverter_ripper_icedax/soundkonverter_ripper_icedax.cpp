@@ -1,9 +1,12 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "icedaxripperglobal.h"
 
 #include "soundkonverter_ripper_icedax.h"
 
-#include <KLocale>
+#include <QLocale>
 
 soundkonverter_ripper_icedax::soundkonverter_ripper_icedax( QObject *parent, const QVariantList& args  )
     : RipperPlugin( parent )
@@ -62,7 +65,7 @@ void soundkonverter_ripper_icedax::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tracks, const KUrl& outputFile )
+int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tracks, const QUrl& outputFile )
 {
     QStringList command;
 
@@ -83,16 +86,14 @@ int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tra
 
     RipperPluginItem *newItem = new RipperPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
     newItem->data.fileCount = ( track > 0 ) ? 1 : tracks;
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -100,7 +101,7 @@ int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tra
     return newItem->id;
 }
 
-QStringList soundkonverter_ripper_icedax::ripCommand( const QString& device, int track, int tracks, const KUrl& outputFile )
+QStringList soundkonverter_ripper_icedax::ripCommand( const QString& device, int track, int tracks, const QUrl& outputFile )
 {
     Q_UNUSED(device)
     Q_UNUSED(track)
@@ -164,6 +165,8 @@ void soundkonverter_ripper_icedax::processOutput()
     }
 }
 
-K_PLUGIN_FACTORY(ripper_icedax, registerPlugin<soundkonverter_ripper_icedax>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_ripper_icedax, "ripper_icedax.json")
 
 #include "soundkonverter_ripper_icedax.moc"

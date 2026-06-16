@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Mac",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

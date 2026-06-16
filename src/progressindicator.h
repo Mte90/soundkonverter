@@ -4,7 +4,7 @@
 #define PROGRESSINDICATOR_H
 
 #include <QWidget>
-#include <QDateTime>
+#include <QElapsedTimer>
 
 class QProgressBar;
 class QLabel;
@@ -60,7 +60,7 @@ private:
     float totalTime;
     float processedTime;
 
-    QTime updateTime;
+    QElapsedTimer updateTime;
     float lastProcessedTime;
     TrailingAverage timeAverage;
     TrailingAverage speedAverage;

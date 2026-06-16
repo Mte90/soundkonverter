@@ -6,7 +6,7 @@ set(soundkonverter_codec_ffmpeg_SRCS
 )
 
 add_library(soundkonverter_codec_ffmpeg MODULE ${soundkonverter_codec_ffmpeg_SRCS})
-target_link_libraries(soundkonverter_codec_ffmpeg KF5::WidgetsAddons Qt5::Xml soundkonvertercore)
+target_link_libraries(soundkonverter_codec_ffmpeg KF6::WidgetsAddons Qt6::Xml soundkonvertercore)
 
 ########### install files ###############
 

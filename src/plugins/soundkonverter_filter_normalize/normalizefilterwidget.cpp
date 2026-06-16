@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "normalizefilterglobal.h"
 
 #include "normalizefilterwidget.h"
@@ -6,7 +9,7 @@
 
 #include <QLayout>
 #include <QHBoxLayout>
-#include <KLocale>
+#include <QLocale>
 #include <QCheckBox>
 
 NormalizeFilterWidget::NormalizeFilterWidget()

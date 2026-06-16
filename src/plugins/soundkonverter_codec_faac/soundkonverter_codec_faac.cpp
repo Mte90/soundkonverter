@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "faaccodecglobal.h"
 
 #include "soundkonverter_codec_faac.h"
@@ -6,7 +9,7 @@
 #include "faaccodecwidget.h"
 
 #include <QFileInfo>
-#include <KConfigGroup>
+#include <QSettings>
 
 
 soundkonverter_codec_faac::soundkonverter_codec_faac( QObject *parent, const QVariantList& args  )
@@ -17,13 +20,11 @@ soundkonverter_codec_faac::soundkonverter_codec_faac( QObject *parent, const QVa
     binaries["faac"] = "";
     binaries["faad"] = "";
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-
-    group = conf->group( "Plugin-"+name() );
-    configVersion = group.readEntry( "configVersion", 0 );
-    faacLastModified = group.readEntry( "faacLastModified", QDateTime() );
-    faacHasMp4Support = group.readEntry( "faacHasMp4Support", true );
+    QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+    conf.beginGroup("Plugin-" + name());
+    configVersion = conf.value("configVersion", 0).toInt();
+    faacLastModified = conf.value("faacLastModified", QDateTime()).toDateTime();
+    faacHasMp4Support = conf.value("faacHasMp4Support", true).toBool();
 
     allCodecs += "aac";
     allCodecs += "m4a/aac";
@@ -54,19 +55,17 @@ QList<ConversionPipeTrunk> soundkonverter_codec_faac::codecTable()
         QFileInfo faacInfo( binaries["faac"] );
         if( faacInfo.lastModified() > faacLastModified || configVersion < version() )
         {
-            infoProcess = new KProcess();
-            infoProcess.data()->setOutputChannelMode( KProcess::MergedChannels );
-            connect( infoProcess.data(), SIGNAL(readyRead()), this, SLOT(infoProcessOutput()) );
-            connect( infoProcess.data(), SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(infoProcessExit(int,QProcess::ExitStatus)) );
+            infoProcess = new QProcess();
+            infoProcess->setProcessChannelMode( QProcess::MergedChannels );
+            connect( infoProcess, SIGNAL(readyRead()), this, SLOT(infoProcessOutput()) );
+            connect( infoProcess, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(infoProcessExit(int,QProcess::ExitStatus)) );
 
             QStringList command;
             command += binaries["faac"];
             command += "--help";
-            infoProcess.data()->clearProgram();
-            infoProcess.data()->setShellCommand( command.join(" ") );
-            infoProcess.data()->start();
+            infoProcess->start(command.first(), command.mid(1));
 
-            infoProcess.data()->waitForFinished( 3000 );
+            infoProcess->waitForFinished( 3000 );
         }
     }
 
@@ -151,7 +150,7 @@ CodecWidget *soundkonverter_codec_faac::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_faac::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_faac::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -159,14 +158,12 @@ int soundkonverter_codec_faac::convert( const KUrl& inputFile, const KUrl& outpu
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -174,7 +171,7 @@ int soundkonverter_codec_faac::convert( const KUrl& inputFile, const KUrl& outpu
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_faac::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_faac::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -222,18 +219,20 @@ float soundkonverter_codec_faac::parseOutput( const QString& output )
 {
     //  9397/9397  (100%)|  136.1  |    9.1/9.1    |   23.92x | 0.0
 
-    QRegExp regEnc("(\\d+)/(\\d+)");
-    if( output.contains(regEnc) )
+    QRegularExpression regEnc("(\\d+)/(\\d+)");
+    QRegularExpressionMatch matchEnc = regEnc.match(output);
+    if( matchEnc.hasMatch() )
     {
-        return (float)regEnc.cap(1).toInt()*100/regEnc.cap(2).toInt();
+        return (float)matchEnc.captured(1).toInt()*100/matchEnc.captured(2).toInt();
     }
 
     // 15% decoding xxx
 
-    QRegExp regDec("(\\d+)%");
-    if( output.contains(regDec) )
+    QRegularExpression regDec("(\\d+)%");
+    QRegularExpressionMatch matchDec = regDec.match(output);
+    if( matchDec.hasMatch() )
     {
-        return (float)regDec.cap(1).toInt();
+        return (float)matchDec.captured(1).toInt();
     }
 
     return -1;
@@ -241,7 +240,7 @@ float soundkonverter_codec_faac::parseOutput( const QString& output )
 
 void soundkonverter_codec_faac::infoProcessOutput()
 {
-    infoProcessOutputData.append( infoProcess.data()->readAllStandardOutput().data() );
+    infoProcessOutputData.append( QString::fromUtf8(infoProcess->readAllStandardOutput()) );
 }
 
 void soundkonverter_codec_faac::infoProcessExit( int exitCode, QProcess::ExitStatus exitStatus )
@@ -261,18 +260,18 @@ void soundkonverter_codec_faac::infoProcessExit( int exitCode, QProcess::ExitSta
     QFileInfo ffmpegInfo( binaries["faac"] );
     faacLastModified = ffmpegInfo.lastModified();
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-
-    group = conf->group( "Plugin-"+name() );
-    group.writeEntry( "configVersion", version() );
-    group.writeEntry( "faacLastModified", faacLastModified );
-    group.writeEntry( "faacHasMp4Support", faacHasMp4Support );
+    QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+    conf.beginGroup("Plugin-" + name());
+    conf.setValue("configVersion", version() );
+    conf.setValue("faacLastModified", faacLastModified );
+    conf.setValue("faacHasMp4Support", faacHasMp4Support );
 
     infoProcessOutputData.clear();
-    infoProcess.data()->deleteLater();
+    infoProcess->deleteLater();
 }
 
-K_PLUGIN_FACTORY(codec_faac, registerPlugin<soundkonverter_codec_faac>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_faac, "soundkonverter_codec_faac.json")
 
 #include "soundkonverter_codec_faac.moc"

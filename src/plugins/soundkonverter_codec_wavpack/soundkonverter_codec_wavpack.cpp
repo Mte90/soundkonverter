@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "wavpackcodecglobal.h"
 
 #include "soundkonverter_codec_wavpack.h"
@@ -81,7 +84,7 @@ CodecWidget *soundkonverter_codec_wavpack::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_wavpack::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_wavpack::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -89,14 +92,12 @@ int soundkonverter_codec_wavpack::convert( const KUrl& inputFile, const KUrl& ou
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -104,7 +105,7 @@ int soundkonverter_codec_wavpack::convert( const KUrl& inputFile, const KUrl& ou
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_wavpack::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_wavpack::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -165,15 +166,17 @@ float soundkonverter_codec_wavpack::parseOutput( const QString& output )
     // creating test.wv,  58% done...
     // restoring test.wv.wav,  31% done...
 
-    QRegExp reg("\\s+(\\d+)% done");
-    if( output.contains(reg) )
+    QRegularExpression reg("\\s+(\\d+)% done");
+    if( reg.match(output).hasMatch() )
     {
-        return (float)reg.cap(1).toInt();
+        return (float)reg.match(output).captured(1).toInt();
     }
 
     return -1;
 }
 
-K_PLUGIN_FACTORY(codec_wavpack, registerPlugin<soundkonverter_codec_wavpack>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_wavpack, "codec_wavpack.json")
 
 #include "soundkonverter_codec_wavpack.moc"

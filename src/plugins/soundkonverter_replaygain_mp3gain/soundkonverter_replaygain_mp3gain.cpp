@@ -1,9 +1,18 @@
 
+#include <QStandardPaths>
+#include <QSettings>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "mp3replaygainglobal.h"
 
 #include "soundkonverter_replaygain_mp3gain.h"
 
-#include <KDialog>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <QAbstractButton>
+#include <Qt>
 #include <QComboBox>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
@@ -32,13 +41,11 @@ soundkonverter_replaygain_mp3gain::soundkonverter_replaygain_mp3gain( QObject *p
 
     allCodecs += "mp3";
 
-    KSharedConfig::Ptr conf = KGlobal::config();
-    KConfigGroup group;
-
-    group = conf->group( "Plugin-"+name() );
-    tagMode = group.readEntry( "tagMode", 0 );
-    modifyAudioStream = group.readEntry( "modifyAudioStream", false );
-    gainAdjustment = group.readEntry( "gainAdjustment", 0.0 );
+    QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+    conf.beginGroup("Plugin-" + name());
+    tagMode = conf.value( "tagMode", 0 ).toInt();
+    modifyAudioStream = conf.value( "modifyAudioStream", false ).toBool();
+    gainAdjustment = conf.value( "gainAdjustment", 0.0 ).toDouble();
 }
 
 soundkonverter_replaygain_mp3gain::~soundkonverter_replaygain_mp3gain()
@@ -76,11 +83,12 @@ void soundkonverter_replaygain_mp3gain::showConfigDialog( ActionType action, con
     Q_UNUSED(action)
     Q_UNUSED(codecName)
 
-    if( !configDialog.data() )
+    if( !configDialog )
     {
-        configDialog = new KDialog( parent );
-        configDialog.data()->setCaption( i18n("Configure %1",*global_plugin_name) );
-        configDialog.data()->setButtons( KDialog::Ok | KDialog::Cancel | KDialog::Default );
+        configDialog = new QDialog( parent );
+        configDialog->setWindowTitle( i18n("Configure %1",*global_plugin_name) );
+
+        QVBoxLayout *configDialogLayout = new QVBoxLayout( configDialog.data() );
 
         QWidget *configDialogWidget = new QWidget( configDialog.data() );
         QVBoxLayout *configDialogBox = new QVBoxLayout( configDialogWidget );
@@ -110,39 +118,46 @@ void soundkonverter_replaygain_mp3gain::showConfigDialog( ActionType action, con
         configDialogBox2->addWidget( configDialogModifyAudioStreamCheckBox );
         configDialogBox->addLayout( configDialogBox2 );
 
-        configDialog.data()->setMainWidget( configDialogWidget );
-        connect( configDialog.data(), SIGNAL( okClicked() ), this, SLOT( configDialogSave() ) );
-        connect( configDialog.data(), SIGNAL( defaultClicked() ), this, SLOT( configDialogDefault() ) );
+        configDialogWidget->setLayout( configDialogBox );
+        configDialogLayout->addWidget( configDialogWidget );
+
+        QDialogButtonBox *buttonBox = new QDialogButtonBox( QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults );
+        configDialogLayout->addWidget( buttonBox );
+
+        connect( buttonBox, SIGNAL( accepted() ), this, SLOT( configDialogSave() ) );
+        connect( buttonBox, SIGNAL( rejected() ), configDialog.data(), SLOT( reject() ) );
+        connect( buttonBox, &QDialogButtonBox::clicked, this, [this](QAbstractButton *btn) {
+            if( btn->text().contains("Defaults") )
+                configDialogDefault();
+        } );
     }
     configDialogTagModeComboBox->setCurrentIndex( tagMode );
     configDialogModifyAudioStreamCheckBox->setChecked( modifyAudioStream );
     configDialogGainAdjustmentSpinBox->setValue( gainAdjustment );
-    configDialog.data()->show();
+    configDialog->show();
 }
 
 void soundkonverter_replaygain_mp3gain::configDialogSave()
 {
-    if( configDialog.data() )
+    if( configDialog )
     {
         tagMode = configDialogTagModeComboBox->currentIndex();
         modifyAudioStream = configDialogModifyAudioStreamCheckBox->isChecked();
         gainAdjustment = configDialogGainAdjustmentSpinBox->value();
 
-        KSharedConfig::Ptr conf = KGlobal::config();
-        KConfigGroup group;
+        QSettings conf(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/soundkonverterrc", QSettings::IniFormat);
+        conf.beginGroup("Plugin-" + name());
+        conf.setValue( "tagMode", tagMode );
+        conf.setValue( "modifyAudioStream", modifyAudioStream );
+        conf.setValue( "gainAdjustment", gainAdjustment );
 
-        group = conf->group( "Plugin-"+name() );
-        group.writeEntry( "tagMode", tagMode );
-        group.writeEntry( "modifyAudioStream", modifyAudioStream );
-        group.writeEntry( "gainAdjustment", gainAdjustment );
-
-        configDialog.data()->deleteLater();
+        configDialog->deleteLater();
     }
 }
 
 void soundkonverter_replaygain_mp3gain::configDialogDefault()
 {
-    if( configDialog.data() )
+    if( configDialog )
     {
         configDialogTagModeComboBox->setCurrentIndex( 0 );
         configDialogModifyAudioStreamCheckBox->setChecked( false );
@@ -160,15 +175,15 @@ void soundkonverter_replaygain_mp3gain::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_replaygain_mp3gain::apply( const KUrl::List& fileList, ReplayGainPlugin::ApplyMode mode )
+int soundkonverter_replaygain_mp3gain::apply( const QList<QUrl>& fileList, ReplayGainPlugin::ApplyMode mode )
 {
     if( fileList.count() <= 0 )
         return BackendPlugin::UnknownError;
 
     Mp3GainPluginItem *newItem = new Mp3GainPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
 
     QStringList command;
@@ -219,14 +234,12 @@ int soundkonverter_replaygain_mp3gain::apply( const KUrl::List& fileList, Replay
             command += "i";
         }
     }
-    foreach( const KUrl& file, fileList )
+    for(const QUrl& file : fileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -259,8 +272,8 @@ void soundkonverter_replaygain_mp3gain::undoProcessExit( int exitCode, QProcess:
     if( item->process )
         item->process->deleteLater();
 
-    item->process = new KProcess( item );
-    item->process->setOutputChannelMode( KProcess::MergedChannels );
+    item->process = new QProcess( item );
+    item->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( item->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( item->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
@@ -275,14 +288,12 @@ void soundkonverter_replaygain_mp3gain::undoProcessExit( int exitCode, QProcess:
     // delete tags
     command += "-s";
     command += "d";
-    foreach( const KUrl& file, item->undoFileList )
+    for(const QUrl& file : item->undoFileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    item->process->clearProgram();
-    item->process->setShellCommand( command.join(" ") );
-    item->process->start();
+    item->process->startCommand(command.join(" "));
 
     logCommand( item->id, command.join(" ") );
 }
@@ -294,23 +305,23 @@ float soundkonverter_replaygain_mp3gain::parseOutput( const QString& output )
 
     float progress = -1.0f;
 
-    QRegExp reg1("\\[(\\d+)/(\\d+)\\] (\\d+)%");
-    QRegExp reg2("(\\d+)%");
-    if( output.contains(reg1) )
+    QRegularExpression reg1("\\[(\\d+)/(\\d+)\\] (\\d+)%");
+    QRegularExpression reg2("(\\d+)%");
+    if( reg1.match(output).hasMatch() )
     {
-        float fraction = 1.0f/reg1.cap(2).toInt();
-        progress = 100*(reg1.cap(1).toInt()-1)*fraction + reg1.cap(3).toInt()*fraction;
+        float fraction = 1.0f/reg1.match(output).captured(2).toInt();
+        progress = 100*(reg1.match(output).captured(1).toInt()-1)*fraction + reg1.match(output).captured(3).toInt()*fraction;
     }
-    else if( output.contains(reg2) )
+    else if( reg2.match(output).hasMatch() )
     {
-        progress = reg2.cap(1).toInt();
+        progress = reg2.match(output).captured(1).toInt();
     }
 
     // Applying mp3 gain change of -6 to /home/user/file.mp3...
     // Undoing mp3gain changes (6,6) to /home/user/file.mp3...
     // Deleting tag info of /home/user/file.mp3...
-    QRegExp reg3("[Applying mp3 gain change|Undoing mp3gain changes|Deleting tag info]");
-    if( progress == -1 && output.contains(reg3) )
+    QRegularExpression reg3("[Applying mp3 gain change|Undoing mp3gain changes|Deleting tag info]");
+    if( progress == -1 && reg3.match(output).hasMatch() )
     {
         progress = 0.0f;
     }
@@ -318,6 +329,8 @@ float soundkonverter_replaygain_mp3gain::parseOutput( const QString& output )
     return progress;
 }
 
-K_PLUGIN_FACTORY(replaygain_mp3gain, registerPlugin<soundkonverter_replaygain_mp3gain>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_replaygain_mp3gain, "replaygain_mp3gain.json")
 
 #include "soundkonverter_replaygain_mp3gain.moc"

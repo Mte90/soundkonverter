@@ -1,0 +1,10 @@
+{
+    "KPlugin": {
+        "Name": "FAAC Encoder",
+        "Description": "FAAC AAC encoder plugin for soundKonverter",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

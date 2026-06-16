@@ -1,11 +1,14 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "musepackcodecglobal.h"
 
 #include "soundkonverter_codec_musepack.h"
 #include "musepackconversionoptions.h"
 #include "musepackcodecwidget.h"
 
-#include <KStandardDirs>
+#include <QStandardPaths>
 #include <QFile>
 
 
@@ -31,9 +34,9 @@ QString soundkonverter_codec_musepack::name() const
 
 void soundkonverter_codec_musepack::scanForBackends( const QStringList& directoryList )
 {
-    binaries["mppenc"] = KStandardDirs::findExe( "mppenc" ); // sv7
+    binaries["mppenc"] = QStandardPaths::findExecutable( "mppenc" ); // sv7
     if( binaries["mppenc"].isEmpty() )
-        binaries["mppenc"] = KStandardDirs::findExe( "mpcenc" ); // sv8
+        binaries["mppenc"] = QStandardPaths::findExecutable( "mpcenc" ); // sv8
 
     if( binaries["mppenc"].isEmpty() )
     {
@@ -52,9 +55,9 @@ void soundkonverter_codec_musepack::scanForBackends( const QStringList& director
         }
     }
 
-    binaries["mppdec"] = KStandardDirs::findExe( "mppdec" ); // sv7
+    binaries["mppdec"] = QStandardPaths::findExecutable( "mppdec" ); // sv7
     if( binaries["mppdec"].isEmpty() )
-        binaries["mppdec"] = KStandardDirs::findExe( "mpcdec" ); // sv8
+        binaries["mppdec"] = QStandardPaths::findExecutable( "mpcdec" ); // sv8
 
     if( binaries["mppdec"].isEmpty() )
     {
@@ -129,7 +132,7 @@ CodecWidget *soundkonverter_codec_musepack::newCodecWidget()
     return qobject_cast<CodecWidget*>(widget);
 }
 
-int soundkonverter_codec_musepack::convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+int soundkonverter_codec_musepack::convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     QStringList command = convertCommand( inputFile, outputFile, inputCodec, outputCodec, _conversionOptions, tags, replayGain );
     if( command.isEmpty() )
@@ -137,14 +140,12 @@ int soundkonverter_codec_musepack::convert( const KUrl& inputFile, const KUrl& o
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -152,7 +153,7 @@ int soundkonverter_codec_musepack::convert( const KUrl& inputFile, const KUrl& o
     return newItem->id;
 }
 
-QStringList soundkonverter_codec_musepack::convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
+QStringList soundkonverter_codec_musepack::convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags, bool replayGain )
 {
     Q_UNUSED(inputCodec)
     Q_UNUSED(tags)
@@ -240,10 +241,10 @@ float soundkonverter_codec_musepack::parseOutput( const QString& output )
     // 0:04.1
     // 0:02.6
 
-    QRegExp reg("(\\d+\\.\\d)\\s+\\d+\\.\\d kbps");
-    if( output.contains(reg) )
+    QRegularExpression reg("(\\d+\\.\\d)\\s+\\d+\\.\\d kbps");
+    if( reg.match(output).hasMatch() )
     {
-        return reg.cap(1).toFloat();
+        return reg.match(output).captured(1).toFloat();
     }
 
     return -1;
@@ -256,6 +257,8 @@ ConversionOptions *soundkonverter_codec_musepack::conversionOptionsFromXml( QDom
     return options;
 }
 
-K_PLUGIN_FACTORY(codec_musepack, registerPlugin<soundkonverter_codec_musepack>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_codec_musepack, "codec_musepack.json")
 
 #include "soundkonverter_codec_musepack.moc"

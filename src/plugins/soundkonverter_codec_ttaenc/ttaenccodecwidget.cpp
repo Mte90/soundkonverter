@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "ttaenccodecglobal.h"
 
 #include "ttaenccodecwidget.h"
@@ -7,7 +10,7 @@
 #include <QLayout>
 #include <QCheckBox>
 #include <KLineEdit>
-#include <KLocale>
+#include <QLocale>
 
 
 TTAEncCodecWidget::TTAEncCodecWidget()

@@ -4,12 +4,12 @@
 
 #include "../../core/codecplugin.h"
 
-#include <QWeakPointer>
-#include <KUrl>
+#include <QPointer>
+#include <QUrl>
+#include <QComboBox>
 
 class ConversionOptions;
-class KDialog;
-class KComboBox;
+class QDialog;
 
 
 class soundkonverter_codec_lame : public CodecPlugin
@@ -32,15 +32,15 @@ public:
     void showInfo( QWidget *parent );
     CodecWidget *newCodecWidget();
 
-    int convert( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    QStringList convertCommand( const KUrl& inputFile, const KUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
+    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
+    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
     float parseOutput( const QString& output );
 
     ConversionOptions *conversionOptionsFromXml( QDomElement conversionOptions, QList<QDomElement> *filterOptionsElements = 0 );
 
 private:
-    QWeakPointer<KDialog> configDialog;
-    KComboBox *configDialogStereoModeComboBox;
+    QPointer<QDialog> configDialog;
+    QComboBox *configDialogStereoModeComboBox;
 
     int configVersion;
     QString stereoMode;

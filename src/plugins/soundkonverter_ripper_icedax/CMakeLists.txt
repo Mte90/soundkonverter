@@ -5,7 +5,7 @@ set(soundkonverter_ripper_icedax_SRCS
 )
 
 add_library(soundkonverter_ripper_icedax MODULE ${soundkonverter_ripper_icedax_SRCS})
-target_link_libraries(soundkonverter_ripper_icedax KF5::WidgetsAddons soundkonvertercore)
+target_link_libraries(soundkonverter_ripper_icedax KF6::WidgetsAddons soundkonvertercore)
 
 ########### install files ###############
 

@@ -4,7 +4,7 @@
 
 #include "../../core/codecwidget.h"
 
-class KComboBox;
+class QComboBox;
 class KLineEdit;
 class QSlider;
 class QDoubleSpinBox;
@@ -27,7 +27,7 @@ public:
 
 private:
     // preset selection
-    KComboBox *cPreset;
+    QComboBox *cPreset;
     // user defined options
     QGroupBox *userdefinedBox;
     QSlider *sQuality;

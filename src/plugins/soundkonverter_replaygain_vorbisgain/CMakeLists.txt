@@ -5,7 +5,7 @@ set(soundkonverter_replaygain_vorbisgain_SRCS
 )
 
 add_library(soundkonverter_replaygain_vorbisgain MODULE ${soundkonverter_replaygain_vorbisgain_SRCS})
-target_link_libraries(soundkonverter_replaygain_vorbisgain KF5::WidgetsAddons soundkonvertercore)
+target_link_libraries(soundkonverter_replaygain_vorbisgain KF6::WidgetsAddons soundkonvertercore)
 
 ########### install files ###############
 

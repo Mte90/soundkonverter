@@ -9,7 +9,9 @@
 #include <QProgressBar>
 #include <QToolTip>
 
-#include <KLocale>
+#include <QLocale>
+#include <KLocalizedString>
+#include <QElapsedTimer>
 
 
 TrailingAverage::TrailingAverage()
@@ -46,11 +48,11 @@ void TrailingAverage::addData( float _deltaTime, float _deltaValue )
 float TrailingAverage::average()
 {
     float _deltaTime = 0;
-    foreach( const float time, deltaTime )
+    for(const float time : deltaTime)
         _deltaTime += time;
 
     float _deltaValue = 0;
-    foreach( const float value, deltaValue )
+    for(const float value : deltaValue)
         _deltaValue += value;
 
     return _deltaValue / _deltaTime;
@@ -108,7 +110,7 @@ ProgressIndicator::ProgressIndicator( QWidget *parent, Feature features )
             timeAverage.setCount( 60 );
         }
 
-        updateTime.setHMS( 24, 0, 0 );
+        updateTime.start();
     }
 }
 
@@ -147,7 +149,7 @@ void ProgressIndicator::finished( bool reset )
     else
         pBar->setValue( pBar->maximum() );
 
-    updateTime.setHMS( 24, 0, 0 );
+    updateTime.start();
 
     if( lTime )
     {

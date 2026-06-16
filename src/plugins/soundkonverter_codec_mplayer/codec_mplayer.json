@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Mplayer",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

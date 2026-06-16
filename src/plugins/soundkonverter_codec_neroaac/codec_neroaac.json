@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Neroaac",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

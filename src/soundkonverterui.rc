@@ -10,6 +10,11 @@
             <Separator />
             <Action name="load" />
             <Action name="save" />
+            <Separator />
+            <Action name="quit" />
+        </Menu>
+        <Menu name="settings"><Text>Settings</Text>
+            <Action name="preferences" />
         </Menu>
         <Menu name="conversion"><Text>Conversion</Text>
             <Action name="start" />

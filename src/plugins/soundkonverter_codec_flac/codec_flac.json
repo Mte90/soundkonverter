@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Flac",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Fluidsynth",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

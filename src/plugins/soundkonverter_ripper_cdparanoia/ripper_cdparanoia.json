@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Ripper Cdparanoia",
+        "Category": "Ripper"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/RipperPlugin"
+    ]
+}

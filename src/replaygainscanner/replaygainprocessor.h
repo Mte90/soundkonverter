@@ -8,7 +8,7 @@
 #include <QList>
 #include <QObject>
 #include <QTimer>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QWeakPointer>
 
 class ReplayGainPlugin;
@@ -45,7 +45,7 @@ public:
 
     int time;
 
-    QTime progressedTime;
+    QElapsedTimer progressedTime;
 };
 
 

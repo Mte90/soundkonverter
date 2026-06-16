@@ -18,7 +18,6 @@ class ConvertItem;
 class FileList;
 class Logger;
 
-class KJob;
 
 
 /**
@@ -87,12 +86,6 @@ private:
     QTimer updateTimer;
 
 private slots:
-    /** The file is being moved */
-    void kioJobProgress( KJob *job, unsigned long percent );
-
-    /** The file has been moved */
-    void kioJobFinished( KJob *job );
-
     /** Get the process' output */
     void processOutput();
 

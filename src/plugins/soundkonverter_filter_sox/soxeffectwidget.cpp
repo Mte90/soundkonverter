@@ -1,29 +1,32 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "soxfilterglobal.h"
 
 #include "soxeffectwidget.h"
 
-#include <KLocale>
+#include <QLocale>
 #include <QLayout>
 #include <QBoxLayout>
 #include <QDoubleSpinBox>
 #include <QLabel>
 
-#include <KComboBox>
-#include <KPushButton>
-#include <KIcon>
+#include <QComboBox>
+#include <QPushButton>
+#include <QIcon>
 
 
 SoxEffectWidget::SoxEffectWidget( QWidget *parent )
     : QWidget( parent )
 {
     QHBoxLayout *box = new QHBoxLayout( this );
-    box->setMargin( 0 );
+    box->setContentsMargins( 0,0,0,0 );
 
     QLabel *lEffect = new QLabel( i18n("Effect:") );
     box->addWidget( lEffect );
 
-    cEffect = new KComboBox( this );
+    cEffect = new QComboBox( this );
     connect( cEffect, SIGNAL(activated(int)), this, SLOT(effectChanged(int)) );
     cEffect->addItem( i18n("Disabled") );
 //     cEffect->addItem( "allpass" );
@@ -99,12 +102,12 @@ SoxEffectWidget::SoxEffectWidget( QWidget *parent )
 
     box->addStretch();
 
-    pRemove = new KPushButton( KIcon("list-remove"), i18n("Remove"), this );
+    pRemove = new QPushButton( QIcon::fromTheme("list-remove"), i18n("Remove"), this );
     pRemove->setToolTip( i18n("Remove this effect") );
     box->addWidget( pRemove );
     connect( pRemove, SIGNAL(clicked()), this, SLOT(removeClicked()) );
 
-    pAdd = new KPushButton( KIcon("list-add"), i18n("Add"), this );
+    pAdd = new QPushButton( QIcon::fromTheme("list-add"), i18n("Add"), this );
     pAdd->setToolTip( i18n("Add another effect") );
     box->addWidget( pAdd );
     connect( pAdd, SIGNAL(clicked()), SIGNAL(addEffectWidgetClicked()) );
@@ -133,7 +136,7 @@ void SoxEffectWidget::effectChanged( int index )
 {
     const QString effect = cEffect->itemText( index );
 
-    foreach( QWidget *widget, widgets )
+    for(QWidget *widget : widgets)
     {
         widgetsBox->removeWidget( widget );
         widget->deleteLater();

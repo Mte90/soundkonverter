@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "vorbisreplaygainglobal.h"
 
 #include "soundkonverter_replaygain_vorbisgain.h"
@@ -61,15 +64,15 @@ void soundkonverter_replaygain_vorbisgain::showInfo( QWidget *parent )
     Q_UNUSED(parent)
 }
 
-int soundkonverter_replaygain_vorbisgain::apply( const KUrl::List& fileList, ReplayGainPlugin::ApplyMode mode )
+int soundkonverter_replaygain_vorbisgain::apply( const QList<QUrl>& fileList, ReplayGainPlugin::ApplyMode mode )
 {
     if( fileList.count() <= 0 )
         return BackendPlugin::UnknownError;
 
     ReplayGainPluginItem *newItem = new ReplayGainPluginItem( this );
     newItem->id = lastId++;
-    newItem->process = new KProcess( newItem );
-    newItem->process->setOutputChannelMode( KProcess::MergedChannels );
+    newItem->process = new QProcess( newItem );
+    newItem->process->setProcessChannelMode( QProcess::MergedChannels );
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
@@ -90,14 +93,12 @@ int soundkonverter_replaygain_vorbisgain::apply( const KUrl::List& fileList, Rep
     {
         command += "--clean";
     }
-    foreach( const KUrl& file, fileList )
+    for(const QUrl& file : fileList)
     {
         command += "\"" + escapeUrl(file) + "\"";
     }
 
-    newItem->process->clearProgram();
-    newItem->process->setShellCommand( command.join(" ") );
-    newItem->process->start();
+    newItem->process->startCommand(command.join(" "));
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -113,10 +114,10 @@ float soundkonverter_replaygain_vorbisgain::parseOutput( const QString& output, 
     // -12.14 dB |  46927 |  0.25 |    11599 | 03 - Sugar.ogg
     //   59% - 04 - Suggestions.ogg
 
-    QRegExp regApply("(\\d+)%");
-    if( output.contains(regApply) )
+    QRegularExpression regApply("(\\d+)%");
+    if( regApply.match(output).hasMatch() )
     {
-        progress = (float)regApply.cap(1).toInt();
+        progress = (float)regApply.match(output).captured(1).toInt();
     }
 
     if( progress == -1 )
@@ -166,6 +167,8 @@ void soundkonverter_replaygain_vorbisgain::processOutput()
     }
 }
 
-K_PLUGIN_FACTORY(replaygain_vorbisgain, registerPlugin<soundkonverter_replaygain_vorbisgain>();)
+#include <KPluginFactory>
+
+K_PLUGIN_CLASS_WITH_JSON(soundkonverter_replaygain_vorbisgain, "replaygain_vorbisgain.json")
 
 #include "soundkonverter_replaygain_vorbisgain.moc"

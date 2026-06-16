@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Filter Sox",
+        "Category": "Filter"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/FilterPlugin"
+    ]
+}

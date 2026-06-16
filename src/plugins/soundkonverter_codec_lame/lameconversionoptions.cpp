@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "lamecodecglobal.h"
 
 #include "lameconversionoptions.h"
@@ -87,7 +90,7 @@ ConversionOptions* LameConversionOptions::copy() const
     c->outputFilesystem = outputFilesystem;
     c->replaygain = replaygain;
 
-    foreach( const FilterOptions* f, filterOptions )
+    for(const FilterOptions* f : filterOptions)
     {
         c->filterOptions.append(f->copy());
     }

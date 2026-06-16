@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "shortencodecglobal.h"
 
 #include "shortencodecwidget.h"
@@ -7,7 +10,7 @@
 #include <QLayout>
 #include <QCheckBox>
 #include <KLineEdit>
-#include <KLocale>
+#include <QLocale>
 
 
 ShortenCodecWidget::ShortenCodecWidget()

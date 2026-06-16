@@ -8,7 +8,7 @@
 #include "backendplugin.h"
 
 #include <QMap>
-#include <KUrl>
+#include <QUrl>
 
 class ReplayGainPlugin;
 
@@ -54,15 +54,15 @@ public:
     explicit ReplayGainPlugin( QObject *parent );
     virtual ~ReplayGainPlugin();
 
-    virtual QString type() const;
+    QString type() const override;
 
     virtual QList<ReplayGainPipe> codecTable() = 0;
 
     /** adds replaygain to one or more files */
-    virtual int apply( const KUrl::List& fileList, ApplyMode mode = Add ) = 0;
+    virtual int apply( const QList<QUrl>& fileList, ApplyMode mode = Add ) = 0;
 };
 
 #define K_EXPORT_SOUNDKONVERTER_REPLAYGAIN(libname, classname) \
-        K_EXPORT_COMPONENT_FACTORY( soundkonverter_replaygain_##libname, KGenericFactory<classname>("soundkonverter_replaygain_" #libname) )
+        K_PLUGIN_FACTORY_EXPORT_DEFINE( soundkonverter_replaygain_##libname )
 
 #endif // REPLAYGAINPLUGIN_H

@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "soxfilterglobal.h"
 
 #include "soxfilterwidget.h"
@@ -6,12 +9,12 @@
 #include "soxfilteroptions.h"
 
 #include <QApplication>
-#include <KLocale>
+#include <QLocale>
 #include <QCheckBox>
 #include <QLayout>
 #include <QLabel>
 
-#include <KComboBox>
+#include <QComboBox>
 
 
 SoxFilterWidget::SoxFilterWidget()
@@ -21,7 +24,7 @@ SoxFilterWidget::SoxFilterWidget()
 
     int gridRow = 0;
     QGridLayout *grid = new QGridLayout( this );
-    grid->setMargin( 0 );
+    grid->setContentsMargins( 0,0,0,0 );
 
     // set up filter options selection
 
@@ -31,7 +34,7 @@ SoxFilterWidget::SoxFilterWidget()
     chSampleRate = new QCheckBox( i18n("Sample rate:"), this );
     connect( chSampleRate, SIGNAL(toggled(bool)), SIGNAL(optionsChanged()) );
     box1->addWidget( chSampleRate );
-    cSampleRate = new KComboBox( this );
+    cSampleRate = new QComboBox( this );
     cSampleRate->addItem( "8000 Hz" );
     cSampleRate->addItem( "11025 Hz" );
     cSampleRate->addItem( "12000 Hz" );
@@ -53,7 +56,7 @@ SoxFilterWidget::SoxFilterWidget()
     chSampleSize = new QCheckBox( i18n("Sample size:"), this );
     connect( chSampleSize, SIGNAL(toggled(bool)), SIGNAL(optionsChanged()) );
     box1->addWidget( chSampleSize );
-    cSampleSize = new KComboBox( this );
+    cSampleSize = new QComboBox( this );
     cSampleSize->addItem( "8 bit" );
     cSampleSize->addItem( "16 bit" );
     cSampleSize->addItem( "24 bit" );
@@ -69,7 +72,7 @@ SoxFilterWidget::SoxFilterWidget()
     chChannels = new QCheckBox( i18n("Channels:"), this );
     connect( chChannels, SIGNAL(toggled(bool)), SIGNAL(optionsChanged()) );
     box1->addWidget( chChannels );
-    cChannels = new KComboBox( this );
+    cChannels = new QComboBox( this );
     cChannels->addItem( i18n("Mono") );
     cChannels->addItem( i18n("Stereo") );
     cChannels->setEnabled( false );
@@ -129,7 +132,7 @@ FilterOptions* SoxFilterWidget::currentFilterOptions()
         options->data.channels = 0;
     }
 
-    foreach( SoxEffectWidget *effectWidget, effectWidgets )
+    for(SoxEffectWidget *effectWidget : effectWidgets)
     {
         const SoxFilterOptions::EffectData data = effectWidget->currentEffectOptions();
         if( data.effectName != i18n("Disabled") )
@@ -185,12 +188,12 @@ bool SoxFilterWidget::setCurrentFilterOptions( const FilterOptions *_options )
     chSampleRate->setChecked( options->data.sampleRate > 0 );
     if( options->data.sampleRate > 0 )
     {
-        cSampleRate->setCurrentItem( QString::number(options->data.sampleRate) + " Hz" );
+        cSampleRate->setCurrentText( QString::number(options->data.sampleRate) + " Hz" );
     }
     chSampleSize->setChecked( options->data.sampleSize > 0 );
     if( options->data.sampleSize > 0 )
     {
-        cSampleSize->setCurrentItem( QString::number(options->data.sampleSize) + " bit" );
+        cSampleSize->setCurrentText( QString::number(options->data.sampleSize) + " bit" );
     }
     chChannels->setChecked( options->data.channels > 0 );
     if( options->data.channels > 0 )
@@ -199,7 +202,7 @@ bool SoxFilterWidget::setCurrentFilterOptions( const FilterOptions *_options )
     }
 
     bool first = true;
-    foreach( const SoxFilterOptions::EffectData& effectData, options->data.effects )
+    for(const SoxFilterOptions::EffectData& effectData : options->data.effects)
     {
         if( !first )
             addEffectWidgetClicked();

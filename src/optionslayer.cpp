@@ -7,12 +7,13 @@
 #include <QLayout>
 #include <QFrame>
 
-#include <KLocale>
+#include <QLocale>
 
-#include <KPushButton>
-#include <KIcon>
-#include <KMessageBox>
-#include <KApplication>
+#include <QPushButton>
+#include <QIcon>
+#include <QMessageBox>
+#include <KLocalizedString>
+
 
 
 OptionsLayer::OptionsLayer( Config *config, QWidget *parent )
@@ -46,10 +47,10 @@ OptionsLayer::OptionsLayer( Config *config, QWidget *parent )
     QHBoxLayout *buttonBox = new QHBoxLayout();
     frameLayout->addLayout( buttonBox );
     buttonBox->addStretch();
-    pOk = new KPushButton( KIcon("dialog-ok"), i18n("Ok"), this );
+    pOk = new QPushButton( QIcon::fromTheme("dialog-ok"), i18n("Ok"), this );
     buttonBox->addWidget( pOk );
     connect( pOk, SIGNAL(clicked()), this, SLOT(ok()) );
-    pCancel = new KPushButton( KIcon("dialog-cancel"), i18n("Cancel"), this );
+    pCancel = new QPushButton( QIcon::fromTheme("dialog-cancel"), i18n("Cancel"), this );
     buttonBox->addWidget( pCancel );
     connect( pCancel, SIGNAL(clicked()), this, SLOT(abort()) );
 
@@ -129,14 +130,14 @@ void OptionsLayer::ok()
         options->accepted();
         pOk->setDisabled( true );
         pCancel->setDisabled( true );
-        kapp->processEvents();
+        qApp->processEvents();
         emit done( urls, conversionOptions, command );
         emit saveFileList();
         fadeOut();
     }
     else
     {
-        KMessageBox::error( this, i18n("No conversion options selected.") ); // possibly unneeded i18n string
+        QMessageBox::critical( this, i18n("Error"), i18n("No conversion options selected.") ); // possibly unneeded i18n string
     }
 }
 

@@ -1,11 +1,14 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "ffmpegcodecglobal.h"
 
 #include "ffmpegcodecwidget.h"
 #include "../../core/conversionoptions.h"
 
-#include <KLocale>
-#include <KComboBox>
+#include <QLocale>
+#include <QComboBox>
 #include <KLineEdit>
 #include <QLayout>
 #include <QLabel>
@@ -46,7 +49,7 @@ FFmpegCodecWidget::FFmpegCodecWidget()
     connect( iBitrate, SIGNAL(valueChanged(int)), SIGNAL(optionsChanged()) );
     topBox->addWidget( iBitrate );
 
-    cBitrate = new KComboBox( this );
+    cBitrate = new QComboBox( this );
     cBitrate->addItem( "32 kbps" );
     cBitrate->addItem( "40 kbps" );
     cBitrate->addItem( "48 kbps" );

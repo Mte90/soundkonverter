@@ -11,18 +11,19 @@
 #include <QBoxLayout>
 #include <QLabel>
 
-#include <KLocale>
+#include <QLocale>
 #include <QFrame>
 #include <QChar>
-#include <KIcon>
-#include <KComboBox>
-#include <KPushButton>
-#include <KInputDialog>
-#include <KMessageBox>
+#include <QIcon>
+#include <QComboBox>
+#include <QPushButton>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QFile>
-#include <KStandardDirs>
+#include <QStandardPaths>
 #include <QMenu>
 #include <QToolButton>
+#include <KLocalizedString>
 
 #define setShown setVisible
 
@@ -45,22 +46,22 @@ OptionsDetailed::OptionsDetailed( Config* _config, QWidget* parent )
 
     QLabel *lFormat = new QLabel( i18n("Format:"), this );
     topBox->addWidget( lFormat );
-    cFormat = new KComboBox( this );
+    cFormat = new QComboBox( this );
     topBox->addWidget( cFormat );
     cFormat->addItems( config->pluginLoader()->formatList(PluginLoader::Encode,PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid)) );
-    connect( cFormat, SIGNAL(activated(const QString&)), this, SLOT(formatChanged(const QString&)) );
-//     connect( cFormat, SIGNAL(activated(const QString&)), this, SLOT(somethingChanged()) );
+    connect( cFormat, SIGNAL(textActivated(const QString&)), this, SLOT(formatChanged(const QString&)) );
+//     connect( cFormat, SIGNAL(textActivated(const QString&)), this, SLOT(somethingChanged()) );
 
     topBox->addStretch();
 
     lPlugin = new QLabel( i18n("Use Plugin:"), this );
     topBox->addWidget( lPlugin );
-    cPlugin = new KComboBox( this );
+    cPlugin = new QComboBox( this );
     topBox->addWidget( cPlugin );
     cPlugin->setSizeAdjustPolicy( QComboBox::AdjustToContents );
-    connect( cPlugin, SIGNAL(activated(const QString&)), this, SLOT(encoderChanged(const QString&)) );
-    connect( cPlugin, SIGNAL(activated(const QString&)), this, SLOT(somethingChanged()) );
-    pConfigurePlugin = new KPushButton( KIcon("configure"), "", this );
+    connect( cPlugin, SIGNAL(textActivated(const QString&)), this, SLOT(encoderChanged(const QString&)) );
+    connect( cPlugin, SIGNAL(textActivated(const QString&)), this, SLOT(somethingChanged()) );
+    pConfigurePlugin = new QPushButton( QIcon::fromTheme("configure"), "", this );
     pConfigurePlugin->setFixedSize( cPlugin->sizeHint().height(), cPlugin->sizeHint().height() );
     pConfigurePlugin->setFlat( true );
     topBox->addWidget( pConfigurePlugin );
@@ -88,7 +89,7 @@ OptionsDetailed::OptionsDetailed( Config* _config, QWidget* parent )
     grid->addWidget( lineFrame, gridRow++, 0 );
 
     int filterCount = 0;
-    foreach( const QString& pluginName, config->data.backends.enabledFilters )
+    for(const QString& pluginName : config->data.backends.enabledFilters)
     {
         FilterPlugin *plugin = qobject_cast<FilterPlugin*>(config->pluginLoader()->backendPluginByName(pluginName));
         if( !plugin )
@@ -133,14 +134,14 @@ OptionsDetailed::OptionsDetailed( Config* _config, QWidget* parent )
     lEstimSize = new QLabel( QString(QChar(8776))+"? B / min." );
     lEstimSize->hide(); // hide for now because most plugins report inaccurate data
     bottomBox->addWidget( lEstimSize );
-    pProfileSave = new KPushButton( KIcon("document-save"), "", this );
+    pProfileSave = new QPushButton( QIcon::fromTheme("document-save"), "", this );
     bottomBox->addWidget( pProfileSave );
     pProfileSave->setFixedWidth( pProfileSave->height() );
     pProfileSave->setToolTip( i18n("Save current options as a profile") );
     connect( pProfileSave, SIGNAL(clicked()), this, SLOT(saveCustomProfile()) );
     pProfileLoad = new QToolButton( this );
     bottomBox->addWidget( pProfileLoad );
-    pProfileLoad->setIcon( KIcon("document-open") );
+    pProfileLoad->setIcon( QIcon::fromTheme("document-open") );
     pProfileLoad->setPopupMode( QToolButton::InstantPopup );
     pProfileLoad->setFixedWidth( pProfileLoad->height() );
     pProfileLoad->setToolTip( i18n("Load saved profiles") );
@@ -207,7 +208,7 @@ void OptionsDetailed::updateProfiles()
         pProfileLoad->menu()->deleteLater();
 
     QMenu *menu = new QMenu( this );
-    foreach( const QString& profile, config->customProfiles() )
+    for(const QString& profile : config->customProfiles())
     {
         menu->addAction( profile, this, SLOT(loadCustomProfileButtonClicked()) );
     }
@@ -413,7 +414,7 @@ bool OptionsDetailed::setCurrentConversionOptions( const ConversionOptions *conv
         succeeded = false;
 
     QStringList usedFilter;
-    foreach( const FilterOptions *filterOptions, conversionOptions->filterOptions )
+    for(const FilterOptions *filterOptions : conversionOptions->filterOptions)
     {
         bool filterSucceeded = false;
         for( int i=0; i<wFilter.size(); i++ )
@@ -456,14 +457,14 @@ bool OptionsDetailed::saveCustomProfile( bool lastUsed )
         else
         {
             bool ok;
-            profileName = KInputDialog::getText( i18n("New profile"), i18n("Enter a name for the new profile:"), "", &ok );
+            profileName = QInputDialog::getText( this, i18n("New profile"), i18n("Enter a name for the new profile:"), QLineEdit::Normal, "", &ok );
             if( !ok )
                 return false;
         }
 
         if( profileName.isEmpty() )
         {
-            KMessageBox::information( this, i18n("You cannot save a profile without a name."), i18n("Profile name is empty") );
+            QMessageBox::information( this, i18n("You cannot save a profile without a name."), i18n("Profile name is empty") );
             return false;
         }
 
@@ -483,7 +484,7 @@ bool OptionsDetailed::saveCustomProfile( bool lastUsed )
 
         if( profiles.contains(profileName) )
         {
-            KMessageBox::information( this, i18n("You cannot overwrite the built-in profiles."), i18n("Profile already exists") );
+            QMessageBox::information( this, i18n("You cannot overwrite the built-in profiles."), i18n("Profile already exists") );
             return false;
         }
 
@@ -491,7 +492,7 @@ bool OptionsDetailed::saveCustomProfile( bool lastUsed )
         QDomElement root;
         bool profileFound = false;
 
-        QFile listFile( KStandardDirs::locateLocal("data","soundkonverter/profiles.xml") );
+        QFile listFile( QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/soundkonverter/profiles.xml" );
         if( listFile.open( QIODevice::ReadOnly ) )
         {
             if( list.setContent( &listFile ) )
@@ -506,11 +507,11 @@ bool OptionsDetailed::saveCustomProfile( bool lastUsed )
                         {
                             int ret;
                             if( lastUsed )
-                                ret = KMessageBox::Yes;
+                                ret = QMessageBox::Yes;
                             else
-                                ret = KMessageBox::questionYesNo( this, i18n("A profile with this name already exists.\n\nDo you want to overwrite the existing one?"), i18n("Profile already exists") );
+                                ret = QMessageBox::question( this, i18n("A profile with this name already exists.\n\nDo you want to overwrite the existing one?"), i18n("Profile already exists") );
 
-                            if( ret == KMessageBox::Yes )
+                            if( ret == QMessageBox::Yes )
                             {
                                 ConversionOptions *conversionOptions = currentConversionOptions( false );
                                 delete config->data.profiles[profileName];

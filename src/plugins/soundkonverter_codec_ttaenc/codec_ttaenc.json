@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Codec Ttaenc",
+        "Category": "Codec"
+    },
+    "X-KDE-ServiceTypes": [
+        "soundKonverter/CodecPlugin"
+    ]
+}

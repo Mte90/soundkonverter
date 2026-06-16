@@ -5,14 +5,14 @@
 #include "replaygainfilelistitem.h"
 #include "core/replaygainplugin.h"
 
-#include <KUrl>
-#include <QTime>
+#include <QUrl>
+#include <QElapsedTimer>
 
 class Config;
 class Logger;
 class ConversionOptions;
 class QProgressBar;
-class KAction;
+class QAction;
 // class QMenu;
 
 
@@ -44,7 +44,7 @@ public:
 
     ReplayGainFileListItem *topLevelItem( int index ) const { return static_cast<ReplayGainFileListItem*>( QTreeWidget::topLevelItem(index) ); }
 
-    void addFiles( const KUrl::List& fileList, const QString& _codecName = "" );
+    void addFiles( const QList<QUrl>& fileList, const QString& _codecName = "" );
 
     void startProcessing( ReplayGainPlugin::ApplyMode _mode );
     void removeAllReplayGain();
@@ -61,13 +61,13 @@ private:
     /** A progressbar, that is shown, when a directory is added recursive */
     QProgressBar *pScanStatus;
     /** Update timer for the scan status */
-    QTime tScanStatus;
+    QElapsedTimer tScanStatus;
 
-    void dragEnterEvent( QDragEnterEvent *event );
-    void dragMoveEvent( QDragMoveEvent *event );
-    void dropEvent( QDropEvent *event );
+    void dragEnterEvent( QDragEnterEvent *event ) override;
+    void dragMoveEvent( QDragMoveEvent *event ) override;
+    void dropEvent( QDropEvent *event ) override;
 
-    void resizeEvent( QResizeEvent *event );
+    void resizeEvent( QResizeEvent *event ) override;
 
     bool queue;             // NOTE currently always true
     ReplayGainPlugin::ApplyMode mode;
@@ -75,13 +75,13 @@ private:
     QTreeWidgetItem *lastAlbumItem;
 
     QMenu *contextMenu;
-    KAction *collapseAction;
-    KAction *expandAction;
-//     KAction *processAddAction;
-//     KAction *processRemoveAction;
-//     KAction *killAction;
-    KAction *moveAction;
-    KAction *removeAction;
+    QAction *collapseAction;
+    QAction *expandAction;
+//     QAction *processAddAction;
+//     QAction *processRemoveAction;
+//     QAction *killAction;
+    QAction *moveAction;
+    QAction *removeAction;
 
     void processNextItem();
     int waitingCount();

@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "opustoolscodecglobal.h"
 
 #include "opustoolsconversionoptions.h"
@@ -63,7 +66,7 @@ ConversionOptions* OpusToolsConversionOptions::copy() const
     c->outputFilesystem = outputFilesystem;
     c->replaygain = replaygain;
 
-    foreach( const FilterOptions* f, filterOptions )
+    for(const FilterOptions* f : filterOptions)
     {
         c->filterOptions.append(f->copy());
     }

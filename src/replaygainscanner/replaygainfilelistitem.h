@@ -8,7 +8,7 @@
 #include <QTreeWidget>
 #include <QItemDelegate>
 #include <QPointer>
-#include <KUrl>
+#include <QUrl>
 
 
 class ReplayGainFileListItem : public QTreeWidgetItem
@@ -42,7 +42,7 @@ public:
         Failed                          = 5
     } returnCode;
 
-    KUrl url;
+    QUrl url;
     QString albumName;
     QString codecName;
     int samplingRate;
@@ -51,7 +51,7 @@ public:
     int length;
 
     QStringList directories();
-    KUrl::List urls();
+    QList<QUrl> urls();
     void setState( State newState );
 
 };
@@ -61,7 +61,7 @@ class ReplayGainFileListItemDelegate : public QItemDelegate
 public:
     explicit ReplayGainFileListItemDelegate( QObject *parent );
 
-    virtual void paint( QPainter *painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
+    void paint( QPainter *painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const override;
 };
 
 #endif // REPLAYGAINFILELISTITEM_H

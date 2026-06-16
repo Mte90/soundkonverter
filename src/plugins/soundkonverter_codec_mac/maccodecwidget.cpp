@@ -1,4 +1,7 @@
 
+#include <QStandardPaths>
+#include <QRegularExpression>
+#include <KLocalizedString>
 #include "maccodecglobal.h"
 
 #include "maccodecwidget.h"
@@ -12,7 +15,7 @@
 #include <QSlider>
 #include <QCheckBox>
 #include <KLineEdit>
-#include <KLocale>
+#include <QLocale>
 
 
 MacCodecWidget::MacCodecWidget()

@@ -5,14 +5,13 @@
 
 #include "pluginloader.h"
 
-#include <kio/job.h>
 
 #include <QList>
-#include <QTime>
-#include <QWeakPointer>
+#include <QElapsedTimer>
+#include <QPointer>
 
 class FileListItem;
-class KProcess;
+class QProcess;
 
 
 /**
@@ -58,9 +57,9 @@ public:
     int lastTake; // TODO use cleaner solution
 
     /** for the conversion and moving the file to a temporary place */
-    QWeakPointer<KProcess> process;
+    QPointer<QProcess> process;
     /** for moving the file to the temporary directory */
-    QWeakPointer<KIO::FileCopyJob> kioCopyJob;
+    QPointer<QProcess> kioCopyJob;
     /** the active plugin */
     BackendPlugin *backendPlugin;
     /** the id from the active plugin (-1 if false) */
@@ -73,15 +72,15 @@ public:
     bool internalReplayGainUsed;
 
     /** the url from fileListItem or the download temp file */
-    KUrl inputUrl;
+    QUrl inputUrl;
     /** the path and the name of the output file */
-    KUrl outputUrl;
+    QUrl outputUrl;
     /** the downloaded input file */
-    KUrl tempInputUrl;
+    QUrl tempInputUrl;
     /** the temp files for the conversion */
-    QList<KUrl> tempConvertUrls;
+    QList<QUrl> tempConvertUrls;
 
-    KUrl generateTempUrl( const QString& prefix, const QString& extension, bool useSharedMemory = false );
+    QUrl generateTempUrl( const QString& prefix, const QString& extension, bool useSharedMemory = false );
 
     /** what shall we do with the file? */
     Mode mode;
@@ -103,7 +102,7 @@ public:
     /** the current conversion progress */
     float progress;
 
-    QTime progressedTime;
+    QElapsedTimer progressedTime;
 };
 
 #endif // CONVERTITEM_H
