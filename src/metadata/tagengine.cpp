@@ -138,7 +138,7 @@ TagEngine::~TagEngine()
 
 TagData* TagEngine::readTags( const QUrl& fileName )
 {
-    TagLib::FileRef fileref( fileName.toString().toLocal8Bit() );
+    TagLib::FileRef fileref( fileName.toLocalFile().toLocal8Bit() );
 
     if( !fileref.isNull() )
     {
@@ -186,7 +186,7 @@ TagData* TagEngine::readTags( const QUrl& fileName )
         TagLib::AudioProperties *audioProperties = fileref.audioProperties();
         if( audioProperties )
         {
-            tagData->length = audioProperties->length();
+            tagData->length = audioProperties->lengthInSeconds();
             tagData->samplingRate = audioProperties->sampleRate();
         }
 
@@ -513,7 +513,7 @@ bool TagEngine::writeTags( const QUrl& fileName, TagData *tagData )
     if( !tagData )
         return false;
 
-    TagLib::FileRef fileref( fileName.toString().toLocal8Bit(), false );
+    TagLib::FileRef fileref( fileName.toLocalFile().toLocal8Bit(), false );
 
     //Set default codec to UTF-8 (see bugs 111246 and 111232)
     TagLib::ID3v2::FrameFactory::instance()->setDefaultTextEncoding( TagLib::String::UTF8 );
@@ -632,7 +632,7 @@ bool TagEngine::writeTags( const QUrl& fileName, TagData *tagData )
 
                 if( !tagData->musicBrainzTrackId.isEmpty() )
                 {
-                    TagLib::ID3v2::UniqueFileIdentifierFrame *frame = new TagLib::ID3v2::UniqueFileIdentifierFrame( "http://musicbrainz.org", TagLib::ByteVector(tagData->musicBrainzTrackId.toUtf8().data(), TagLib::String::UTF8) );
+                    TagLib::ID3v2::UniqueFileIdentifierFrame *frame = new TagLib::ID3v2::UniqueFileIdentifierFrame( "http://musicbrainz.org", TagLib::ByteVector(tagData->musicBrainzTrackId.toUtf8().constData()) );
                     tag->addFrame( frame );
                 }
 
@@ -1019,7 +1019,7 @@ QList<CoverData*> TagEngine::readCovers( const QUrl& fileName )
 {
     QList<CoverData*> covers;
 
-    TagLib::FileRef fileref( fileName.toString().toLocal8Bit() );
+    TagLib::FileRef fileref( fileName.toLocalFile().toLocal8Bit() );
 
     if( !fileref.isNull() )
     {
@@ -1192,7 +1192,7 @@ bool TagEngine::writeCovers( const QUrl& fileName, QList<CoverData*> covers )
     if( covers.isEmpty() )
         return true;
 
-    TagLib::FileRef fileref( fileName.toString().toLocal8Bit(), false );
+    TagLib::FileRef fileref( fileName.toLocalFile().toLocal8Bit(), false );
 
     if( !fileref.isNull() )
     {
@@ -1202,7 +1202,7 @@ bool TagEngine::writeCovers( const QUrl& fileName, QList<CoverData*> covers )
             {
                 for(CoverData *cover : covers)
                 {
-                    TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame( "APIC" );
+                    TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame();
                     frame->setPicture( TagLib::ByteVector( cover->data.data(), cover->data.size() ) );
                     frame->setType( TagLib::ID3v2::AttachedPictureFrame::Type( cover->role ) );
                     if( !cover->mimeType.isEmpty() )
@@ -1390,9 +1390,11 @@ bool TagEngine::writeCoversToDirectory( const QString& directoryName, TagData *t
         QFile file( directoryName + "/" + fileName + extension );
         if( !file.exists() )
         {
-            file.open( QIODevice::WriteOnly );
-            file.write( cover->data.data(), cover->data.size() );
-            file.close();
+            if( file.open( QIODevice::WriteOnly ) )
+            {
+                file.write( cover->data.data(), cover->data.size() );
+                file.close();
+            }
         }
 
         i++;

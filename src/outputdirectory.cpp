@@ -298,7 +298,7 @@ QUrl OutputDirectory::calcPath( FileListItem *fileListItem, Config *config, cons
     else if( options->outputDirectoryMode == CopyStructure )
     {
         QString basePath = options->outputDirectory;
-        QString originalPath = fileListItem->url.toString();
+        QString originalPath = fileListItem->url.toLocalFile();
         int cutpos = basePath.length();
         while( basePath.left(cutpos) != originalPath.left(cutpos) )
         {
