@@ -7,6 +7,8 @@
 #include "filelistitem.h"
 
 #include <QElapsedTimer>
+#include <QQueue>
+#include <QUrl>
 // #include <QDebug>
 
 class FileListItem;
@@ -20,6 +22,19 @@ class ConversionOptions;
 class QMenu;
 class QAction;
 class QProgressBar;
+
+struct PendingFileGroup
+{
+    QList<QUrl> files;
+    int conversionOptionsId;
+    QString notifyCommand;
+    QString codecName;
+    bool firstFile = true;
+    bool senderWasOptionsLayer = false;
+    QUrl directory;
+    bool recursive = false;
+    QStringList codecList;
+};
 
 /**
  * @short The file list
@@ -71,6 +86,8 @@ private:
     void convertNextItem();
     int waitingCount();
     int convertingCount( bool includeWaiting = false );
+    void processNextBatch();
+    void addDirInternal( const QUrl& directory, bool recursive, const QStringList& codecList, int conversionOptionsId );
 
 //     qulonglong spaceLeftForDirectory( const QString& dir );
 //     QStringList fullDiscs; // a list of mount points with volumes that don't have enougth space left
@@ -83,6 +100,9 @@ private:
     void resizeEvent( QResizeEvent *event ) override;
 
     bool queue;
+
+    QQueue<PendingFileGroup> pendingGroups;
+    bool filesPending = false;
 
     Logger *logger;
     Config *config;

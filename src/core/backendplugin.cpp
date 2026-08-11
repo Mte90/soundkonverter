@@ -624,7 +624,7 @@ QString BackendPlugin::escapeUrl( const QUrl& url )
     if( !url.isLocalFile() || url.toLocalFile().isEmpty() )
         return "-";
 
-    return url.toLocalFile().replace("\"","\\\"").replace("$","\\$").replace("`","\\`");
+    return url.toLocalFile().replace(" ","\\ ").replace("(","\\(").replace(")","\\)").replace("\"","\\\"").replace("$","\\$").replace("`","\\`");
 }
 
 void BackendPlugin::logOutput( int id, const QString& message )

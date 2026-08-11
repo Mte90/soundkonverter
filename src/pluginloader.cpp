@@ -24,6 +24,7 @@
 #include <QMimeDatabase>
 #include <QStandardPaths>
 #include <QCoreApplication>
+#include <QDir>
 
 
 bool moreThanConversionPipe( const ConversionPipe& pipe1, const ConversionPipe& pipe2 )
@@ -121,7 +122,25 @@ void PluginLoader::load()
 
     logger->log( 1000, "\nloading plugins ..." );
 
-    const QStringList pluginDirs = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, "kf6/plugins/", QStandardPaths::LocateDirectory);
+    QStringList pluginDirs = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, "kf6/plugins/", QStandardPaths::LocateDirectory);
+
+    // Also look for plugins next to the executable and in the current working directory
+    QStringList localDirs;
+    const QString appDir = QCoreApplication::applicationDirPath();
+    if( !appDir.isEmpty() )
+        localDirs << appDir + "/plugins" << appDir;
+    localDirs << QDir::currentPath() + "/plugins";
+
+    for( const QString& dir : localDirs )
+    {
+        if( QDir( dir ).exists() && !pluginDirs.contains( dir ) )
+        {
+            pluginDirs.append( dir );
+            QCoreApplication::addLibraryPath( dir );
+        }
+    }
+
+    QSet<QString> seenPluginIds;
 
     // Codec plugins: filter by name prefix
     QList<KPluginMetaData> codecPluginsMetaData;
@@ -133,6 +152,9 @@ void PluginLoader::load()
     }
     for( const KPluginMetaData& metaData : codecPluginsMetaData )
     {
+        if( seenPluginIds.contains( metaData.pluginId() ) )
+            continue;
+        seenPluginIds.insert( metaData.pluginId() );
         auto result = KPluginFactory::instantiatePlugin<CodecPlugin>(metaData, nullptr, QVariantList());
         if( result.plugin )
         {
@@ -188,6 +210,9 @@ void PluginLoader::load()
     }
     for( const KPluginMetaData& metaData : filterPluginsMetaData )
     {
+        if( seenPluginIds.contains( metaData.pluginId() ) )
+            continue;
+        seenPluginIds.insert( metaData.pluginId() );
         auto result = KPluginFactory::instantiatePlugin<FilterPlugin>(metaData, nullptr, QVariantList());
         if( result.plugin )
         {
@@ -217,6 +242,9 @@ void PluginLoader::load()
     }
     for( const KPluginMetaData& metaData : rgPluginsMetaData )
     {
+        if( seenPluginIds.contains( metaData.pluginId() ) )
+            continue;
+        seenPluginIds.insert( metaData.pluginId() );
         auto result = KPluginFactory::instantiatePlugin<ReplayGainPlugin>(metaData, nullptr, QVariantList());
         if( result.plugin )
         {
@@ -248,6 +276,9 @@ void PluginLoader::load()
     }
     for( const KPluginMetaData& metaData : ripperPluginsMetaData )
     {
+        if( seenPluginIds.contains( metaData.pluginId() ) )
+            continue;
+        seenPluginIds.insert( metaData.pluginId() );
         auto result = KPluginFactory::instantiatePlugin<RipperPlugin>(metaData, nullptr, QVariantList());
         if( result.plugin )
         {

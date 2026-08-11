@@ -18,6 +18,7 @@
 #include <QApplication>
 #include <QIcon>
 #include <QAction>
+#include <QTimer>
 // #include <kactioncollection.h>
 #include <QMessageBox>
 #include <QStandardPaths>
@@ -313,43 +314,78 @@ int FileList::listDir( const QString& directory, const QStringList& filter, bool
 
 void FileList::addFiles( const QList<QUrl>& fileList, ConversionOptions *conversionOptions, const QString& command, const QString& _codecName, int conversionOptionsId )
 {
-    QString codecName;
-    QString filePathName;
-    QString device;
-
-    int lastConversionOptionsId = -1;
-
-    bool optionsLayerHidden = false; // shouldn't be necessary
-
     if( !conversionOptions && conversionOptionsId == -1 )
     {
         logger->log( 1000, "@addFiles: No conversion options given" );
         return;
     }
 
-    int batchNumber = 0;
-    for(const QUrl& fileName : fileList)
+    PendingFileGroup group;
+    group.files = fileList;
+    group.notifyCommand = command;
+    group.codecName = _codecName;
+    group.senderWasOptionsLayer = ( QObject::sender() == optionsLayer );
+
+    if( conversionOptionsId == -1 )
     {
-        if( !_codecName.isEmpty() )
+        group.conversionOptionsId = config->conversionOptionsManager()->addConversionOptions( conversionOptions );
+        group.firstFile = true; // the first item uses the id directly, later items increase the reference count
+    }
+    else
+    {
+        group.conversionOptionsId = conversionOptionsId;
+        group.firstFile = false; // every item increases the reference count, like the original dir-scan path
+    }
+
+    pendingGroups.enqueue( group );
+    if( !filesPending )
+    {
+        filesPending = true;
+        processNextBatch();
+    }
+}
+
+void FileList::processNextBatch()
+{
+    const int batchSize = 10;
+    int processed = 0;
+
+    while( processed < batchSize && !pendingGroups.isEmpty() )
+    {
+        PendingFileGroup& group = pendingGroups.head();
+
+        if( group.directory.isValid() )
         {
-            codecName = _codecName;
+            addDirInternal( group.directory, group.recursive, group.codecList, group.conversionOptionsId );
+            pendingGroups.dequeue();
+            continue;
+        }
+
+        if( group.files.isEmpty() )
+        {
+            pendingGroups.dequeue();
+            continue;
+        }
+
+        const QUrl fileName = group.files.takeFirst();
+
+        QString codecName;
+        if( !group.codecName.isEmpty() )
+        {
+            codecName = group.codecName;
         }
         else
         {
             QFileInfo fileInfo( fileName.toLocalFile() );
             if( fileInfo.isDir() )
             {
-                if( !optionsLayerHidden && QObject::sender() == optionsLayer )
+                if( group.senderWasOptionsLayer )
                 {
-                    optionsLayerHidden = true;
                     optionsLayer->hide();
                     qApp->processEvents();
                 }
 
-                //             debug
-                //             logger->log( 1000, "@addFiles: adding dir: " + fileName.toLocalFile() );
-
-                addDir( fileName, true, config->pluginLoader()->formatList(PluginLoader::Decode,PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid)), conversionOptions );
+                addDirInternal( fileName, true, config->pluginLoader()->formatList(PluginLoader::Decode,PluginLoader::CompressionType(PluginLoader::InferiorQuality|PluginLoader::Lossy|PluginLoader::Lossless|PluginLoader::Hybrid)), group.conversionOptionsId );
                 continue;
             }
             else
@@ -364,26 +400,17 @@ void FileList::addFiles( const QList<QUrl>& fileList, ConversionOptions *convers
             }
         }
 
-//         logger->log( 1000, "adding file: " + fileName.toLocalFile() + ", codec: " + codecName );
-
         FileListItem * const newItem = new FileListItem( this );
-        if( conversionOptionsId == -1 )
+        if( group.firstFile )
         {
-            if( batchNumber == 0 )
-            {
-                newItem->conversionOptionsId = config->conversionOptionsManager()->addConversionOptions( conversionOptions );
-            }
-            else
-            {
-                newItem->conversionOptionsId = config->conversionOptionsManager()->increaseReferences( lastConversionOptionsId );
-            }
+            newItem->conversionOptionsId = group.conversionOptionsId;
+            group.firstFile = false;
         }
         else
         {
-            newItem->conversionOptionsId = config->conversionOptionsManager()->increaseReferences( conversionOptionsId );
+            newItem->conversionOptionsId = config->conversionOptionsManager()->increaseReferences( group.conversionOptionsId );
         }
 
-        lastConversionOptionsId = newItem->conversionOptionsId;
         newItem->codecName = codecName;
         newItem->track = -1;
         newItem->url = fileName;
@@ -398,24 +425,29 @@ void FileList::addFiles( const QList<QUrl>& fileList, ConversionOptions *convers
         {
             newItem->length = ( newItem->tags && newItem->tags->length > 0 ) ? newItem->tags->length : 200.0f;
         }
-        newItem->notifyCommand = command;
+        newItem->notifyCommand = group.notifyCommand;
 
         addTopLevelItem( newItem );
         updateItem( newItem );
         emit timeChanged( newItem->length );
 
-        batchNumber++;
-
-        if( batchNumber % 50 == 0 )
-            qApp->processEvents();
+        processed++;
     }
 
-    if( !pScanStatus->isVisible() )
+    if( pendingGroups.isEmpty() )
     {
-        emit fileCountChanged( topLevelItemCount() );
+        filesPending = false;
+        if( !pScanStatus->isVisible() )
+        {
+            emit fileCountChanged( topLevelItemCount() );
 
-        if( queue )
-            convertNextItem();
+            if( queue )
+                convertNextItem();
+        }
+    }
+    else
+    {
+        QTimer::singleShot( 0, this, [this]() { processNextBatch(); } );
     }
 }
 
@@ -429,6 +461,22 @@ void FileList::addDir( const QUrl& directory, bool recursive, const QStringList&
 
     const int conversionOptionsId = config->conversionOptionsManager()->addConversionOptions( conversionOptions );
 
+    PendingFileGroup group;
+    group.directory = directory;
+    group.recursive = recursive;
+    group.codecList = codecList;
+    group.conversionOptionsId = conversionOptionsId;
+
+    pendingGroups.enqueue( group );
+    if( !filesPending )
+    {
+        filesPending = true;
+        processNextBatch();
+    }
+}
+
+void FileList::addDirInternal( const QUrl& directory, bool recursive, const QStringList& codecList, int conversionOptionsId )
+{
     pScanStatus->setValue( 0 );
     pScanStatus->setMaximum( 0 );
     pScanStatus->show(); // show the status while scanning the directories
@@ -442,11 +490,6 @@ void FileList::addDir( const QUrl& directory, bool recursive, const QStringList&
     listDir( directory.toLocalFile(), codecList, recursive, conversionOptionsId );
 
     pScanStatus->hide(); // hide the status bar, when the scan is done
-
-    emit fileCountChanged( topLevelItemCount() );
-
-    if( queue )
-        convertNextItem();
 }
 
 void FileList::addTracks( const QString& device, QList<int> trackList, int tracks, QList<TagData*> tagList, ConversionOptions *conversionOptions, const QString& notifyCommand )
