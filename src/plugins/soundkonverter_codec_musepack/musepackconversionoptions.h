@@ -10,11 +10,11 @@ public:
     MusePackConversionOptions();
     ~MusePackConversionOptions();
 
-    bool equals( ConversionOptions *_other );
-    QDomElement toXml( QDomDocument document ) const;
-    bool fromXml( QDomElement conversionOptions, QList<QDomElement> *filterOptionsElements = 0 );
+    bool equals( ConversionOptions *_other ) override;
+    QDomElement toXml( QDomDocument document ) const override;
+    bool fromXml( QDomElement conversionOptions, QList<QDomElement> *filterOptionsElements = 0 ) override;
 
-    ConversionOptions* copy() const;
+    ConversionOptions* copy() const override;
 
     struct Data {
         enum Preset {

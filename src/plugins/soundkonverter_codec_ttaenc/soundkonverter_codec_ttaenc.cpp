@@ -96,7 +96,7 @@ int soundkonverter_codec_ttaenc::convert( const QUrl& inputFile, const QUrl& out
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -128,16 +128,16 @@ QStringList soundkonverter_codec_ttaenc::convertCommand( const QUrl& inputFile, 
             command += conversionOptions->cmdArguments;
         }
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(outputFile);
+        command += escapeUrl(inputFile);
     }
     else
     {
         command += binaries["ttaenc"];
         command += "-d";
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(outputFile);
+        command += escapeUrl(inputFile);
     }
 
     return command;

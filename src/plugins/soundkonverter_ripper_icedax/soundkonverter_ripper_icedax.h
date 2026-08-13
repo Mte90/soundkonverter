@@ -19,23 +19,23 @@ public:
     /** Default Destructor */
     ~soundkonverter_ripper_icedax();
 
-    QString name() const;
+    QString name() const override;
 
-    QList<ConversionPipeTrunk> codecTable();
+    QList<ConversionPipeTrunk> codecTable() override;
 
-    bool isConfigSupported( ActionType action, const QString& codecName );
-    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent );
-    bool hasInfo();
-    void showInfo( QWidget *parent );
+    bool isConfigSupported( ActionType action, const QString& codecName ) override;
+    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent ) override;
+    bool hasInfo() override;
+    void showInfo( QWidget *parent ) override;
 
-    int rip( const QString& device, int track, int tracks, const QUrl& outputFile );
-    QStringList ripCommand( const QString& device, int track, int tracks, const QUrl& outputFile );
+    int rip( const QString& device, int track, int tracks, const QUrl& outputFile ) override;
+    QStringList ripCommand( const QString& device, int track, int tracks, const QUrl& outputFile ) override;
     float parseOutput( const QString& output, RipperPluginItem *ripperItem );
-    float parseOutput( const QString& output );
+    float parseOutput( const QString& output ) override;
 
 private slots:
     /** Get the process' output */
-    void processOutput();
+    void processOutput() override;
 };
 
 #endif // SOUNDKONVERTER_RIPPER_ICEDAX_H

@@ -97,7 +97,7 @@ int soundkonverter_codec_speex::convert( const QUrl& inputFile, const QUrl& outp
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -131,14 +131,14 @@ QStringList soundkonverter_codec_speex::convertCommand( const QUrl& inputFile, c
             command += "--abr";
             command += QString::number(conversionOptions->bitrate*1000);
         }
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
     }
     else
     {
         command += binaries["speexdec"];
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
     }
 
     return command;

@@ -101,7 +101,7 @@ int soundkonverter_filter_normalize::convert( const QUrl& inputFile, const QUrl&
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -132,7 +132,7 @@ QStringList soundkonverter_filter_normalize::convertCommand( const QUrl& inputFi
             if( filterOptions->data.normalize )
             {
                 command += binaries["normalize"];
-                command += "\"" + escapeUrl(outputFile) + "\"";
+                command += escapeUrl(outputFile);
 
                 if( !command.isEmpty() )
                     QFile::copy( inputFile.toLocalFile(), outputFile.toLocalFile() );

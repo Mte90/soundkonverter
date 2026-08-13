@@ -262,7 +262,7 @@ QList<ConversionPipeTrunk> soundkonverter_codec_libav::codecTable()
             QStringList command;
             command += binaries["avconv"];
             command += "-codecs";
-            infoProcess->startCommand(command.join(" "));
+            infoProcess->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
             infoProcess->waitForFinished( 3000 );
         }
@@ -450,7 +450,7 @@ int soundkonverter_codec_libav::convert( const QUrl& inputFile, const QUrl& outp
     {
         command += binaries["avconv"];
         command += "-i";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         for( int i=0; i<codecList.count(); i++ )
         {
             if( codecList.at(i).codecName == outputCodec )
@@ -474,14 +474,14 @@ int soundkonverter_codec_libav::convert( const QUrl& inputFile, const QUrl& outp
         {
             command += conversionOptions->cmdArguments;
         }
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
     else
     {
         command += binaries["avconv"];
         command += "-i";
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
     }
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
@@ -494,7 +494,7 @@ int soundkonverter_codec_libav::convert( const QUrl& inputFile, const QUrl& outp
     if( tags )
         newItem->data.length = tags->length;
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 

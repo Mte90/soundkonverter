@@ -35,17 +35,17 @@ public:
     /** Default Destructor */
     ~soundkonverter_replaygain_mp3gain();
 
-    QString name() const;
+    QString name() const override;
 
-    QList<ReplayGainPipe> codecTable();
+    QList<ReplayGainPipe> codecTable() override;
 
-    bool isConfigSupported( ActionType action, const QString& codecName );
-    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent );
-    bool hasInfo();
-    void showInfo( QWidget *parent );
+    bool isConfigSupported( ActionType action, const QString& codecName ) override;
+    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent ) override;
+    bool hasInfo() override;
+    void showInfo( QWidget *parent ) override;
 
-    int apply( const QList<QUrl>& fileList, ApplyMode mode = Add );
-    float parseOutput( const QString& output );
+    int apply( const QList<QUrl>& fileList, ApplyMode mode = Add ) override;
+    float parseOutput( const QString& output ) override;
 
 private:
     QPointer<QDialog> configDialog;

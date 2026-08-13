@@ -163,7 +163,7 @@ int soundkonverter_codec_faac::convert( const QUrl& inputFile, const QUrl& outpu
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -201,15 +201,15 @@ QStringList soundkonverter_codec_faac::convertCommand( const QUrl& inputFile, co
             command += "-w"; // Wrap AAC data in MP4 container
         }
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(outputFile);
+        command += escapeUrl(inputFile);
     }
     else
     {
         command += binaries["faad"];
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(outputFile);
+        command += escapeUrl(inputFile);
     }
 
     return command;

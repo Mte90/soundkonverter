@@ -355,7 +355,7 @@ int soundkonverter_codec_ffmpeg::convert( const QUrl& inputFile, const QUrl& out
     {
         command += binaries["ffmpeg"];
         command += "-i";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         for( int i=0; i<codecList.count(); i++ )
         {
             if( codecList.at(i).codecName == outputCodec )
@@ -379,14 +379,14 @@ int soundkonverter_codec_ffmpeg::convert( const QUrl& inputFile, const QUrl& out
         {
             command += conversionOptions->cmdArguments;
         }
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
     else
     {
         command += binaries["ffmpeg"];
         command += "-i";
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
     }
 
     CodecPluginItem *newItem = new CodecPluginItem( this );
@@ -399,7 +399,7 @@ int soundkonverter_codec_ffmpeg::convert( const QUrl& inputFile, const QUrl& out
     if( tags )
         newItem->data.length = tags->length;
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -422,6 +422,7 @@ QStringList soundkonverter_codec_ffmpeg::convertCommand( const QUrl& inputFile, 
 
 float soundkonverter_codec_ffmpeg::parseOutput( const QString& output, int *length )
 {
+    Q_UNUSED(output)
     // Duration: 00:02:16.50, start: 0.000000, bitrate: 1411 kb/s
     // size=    2445kB time=00:01:58.31 bitrate= 169.3kbits/s
 

@@ -82,7 +82,7 @@ int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tra
     {
         command += "-t 1+" + QString::number(tracks);
     }
-    command += "\"" + outputFile.toLocalFile() + "\"";
+    command += escapeUrl(outputFile);
 
     RipperPluginItem *newItem = new RipperPluginItem( this );
     newItem->id = lastId++;
@@ -93,7 +93,7 @@ int soundkonverter_ripper_icedax::rip( const QString& device, int track, int tra
 
     newItem->data.fileCount = ( track > 0 ) ? 1 : tracks;
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 

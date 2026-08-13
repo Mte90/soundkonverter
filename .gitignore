@@ -1,2 +1,5 @@
 .opencode
 .sisyphus
+build/
+plugins/
+soundkonverterrc

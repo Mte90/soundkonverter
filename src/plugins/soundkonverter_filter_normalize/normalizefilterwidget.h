@@ -13,8 +13,8 @@ public:
     NormalizeFilterWidget();
     ~NormalizeFilterWidget();
 
-    FilterOptions *currentFilterOptions();
-    bool setCurrentFilterOptions( const FilterOptions *_options );
+    FilterOptions *currentFilterOptions() override;
+    bool setCurrentFilterOptions( const FilterOptions *_options ) override;
 
 private:
     QCheckBox *cNormalize;

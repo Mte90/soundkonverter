@@ -299,7 +299,7 @@ void Convert::convert( ConvertItem *item )
     item->process->setProcessChannelMode(QProcess::MergedChannels);
     connect( item->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( item->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
-    item->process->startCommand(command);        }
+    item->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command});        }
         else
         {
             // at least on plugins doesn't support pipes
@@ -526,7 +526,7 @@ void Convert::replaygain( ConvertItem *item )
     {
         bool waitForVorbisGainFinish = false;
 
-        for(const QString directory : directories)
+        for(const QString& directory : directories)
         {
             if( activeVorbisGainDirectories.contains(directory) )
             {
@@ -805,7 +805,7 @@ void Convert::processExit( int exitCode, QProcess::ExitStatus exitStatus )
 
             if( exitCode == 0 )
             {
-                float fileTime;
+                float fileTime = 0.0f;
                 switch( item->state )
                 {
                     case ConvertItem::initial:
@@ -903,7 +903,7 @@ void Convert::pluginProcessFinished( int id, int exitCode )
 
             if( exitCode == 0 )
             {
-                float fileTime;
+                float fileTime = 0.0f;
                 switch( item->state )
                 {
                     case ConvertItem::initial:

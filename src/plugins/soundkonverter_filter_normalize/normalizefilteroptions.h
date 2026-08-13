@@ -11,11 +11,11 @@ public:
     NormalizeFilterOptions();
     ~NormalizeFilterOptions();
 
-    bool equals( FilterOptions *_other );
-    QDomElement toXml( QDomDocument document, const QString& elementName ) const;
-    bool fromXml( QDomElement filterOptions );
+    bool equals( FilterOptions *_other ) override;
+    QDomElement toXml( QDomDocument document, const QString& elementName ) const override;
+    bool fromXml( QDomElement filterOptions ) override;
 
-    FilterOptions* copy() const;
+    FilterOptions* copy() const override;
 
     struct Data {
         bool normalize;

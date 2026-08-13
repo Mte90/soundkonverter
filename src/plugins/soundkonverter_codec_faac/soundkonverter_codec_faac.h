@@ -20,21 +20,21 @@ public:
     /** Default Destructor */
     ~soundkonverter_codec_faac();
 
-    QString name() const;
+    QString name() const override;
     int version();
 
-    QList<ConversionPipeTrunk> codecTable();
+    QList<ConversionPipeTrunk> codecTable() override;
 
-    bool isConfigSupported( ActionType action, const QString& codecName );
-    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent );
-    bool hasInfo();
-    void showInfo( QWidget *parent );
+    bool isConfigSupported( ActionType action, const QString& codecName ) override;
+    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent ) override;
+    bool hasInfo() override;
+    void showInfo( QWidget *parent ) override;
 
-    CodecWidget *newCodecWidget();
+    CodecWidget *newCodecWidget() override;
 
-    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    float parseOutput( const QString& output );
+    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false ) override;
+    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false ) override;
+    float parseOutput( const QString& output ) override;
 
 private:
     QPointer<QProcess> infoProcess;

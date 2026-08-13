@@ -338,7 +338,7 @@ int soundkonverter_filter_sox::convert( const QUrl& inputFile, const QUrl& outpu
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -376,7 +376,7 @@ QStringList soundkonverter_filter_sox::convertCommand( const QUrl& inputFile, co
         command += "--type";
         command += soxCodecName(inputCodec);
     }
-    command += "\"" + escapeUrl(inputFile) + "\"";
+    command += escapeUrl(inputFile);
     if( filterOptions && filterOptions->data.sampleSize )
     {
         command += "--bits";
@@ -434,7 +434,7 @@ QStringList soundkonverter_filter_sox::convertCommand( const QUrl& inputFile, co
         command += "--type";
         command += soxCodecName(outputCodec);
     }
-    command += "\"" + escapeUrl(outputFile) + "\"";
+    command += escapeUrl(outputFile);
     if( filterOptions && filterOptions->data.sampleRate )
     {
         command += "rate";

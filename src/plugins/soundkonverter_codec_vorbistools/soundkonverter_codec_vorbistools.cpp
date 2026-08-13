@@ -97,7 +97,7 @@ int soundkonverter_codec_vorbistools::convert( const QUrl& inputFile, const QUrl
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -143,9 +143,9 @@ QStringList soundkonverter_codec_vorbistools::convertCommand( const QUrl& inputF
                 command += QString::number(conversionOptions->bitrate);
             }
         }
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
     else
     {
@@ -154,9 +154,9 @@ QStringList soundkonverter_codec_vorbistools::convertCommand( const QUrl& inputF
         {
             command += "-Q";
         }
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
 
     return command;

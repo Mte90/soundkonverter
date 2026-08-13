@@ -177,7 +177,7 @@ int soundkonverter_codec_fluidsynth::convert( const QUrl& inputFile, const QUrl&
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -205,9 +205,9 @@ QStringList soundkonverter_codec_fluidsynth::convertCommand( const QUrl& inputFi
         command += binaries["fluidsynth"];
         command += "-l";
         command += "--fast-render";
-        command += "\"" + escapeUrl(outputFile) + "\"";
-        command += "\"" + escapeUrl(soundFontFile) + "\"";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(outputFile);
+        command += escapeUrl(soundFontFile);
+        command += escapeUrl(inputFile);
     }
 
     return command;

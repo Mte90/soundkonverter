@@ -128,7 +128,7 @@ void PluginLoader::load()
     QStringList localDirs;
     const QString appDir = QCoreApplication::applicationDirPath();
     if( !appDir.isEmpty() )
-        localDirs << appDir + "/plugins" << appDir;
+        localDirs << appDir + "/plugins" << appDir + "/../plugins" << appDir;
     localDirs << QDir::currentPath() + "/plugins";
 
     for( const QString& dir : localDirs )

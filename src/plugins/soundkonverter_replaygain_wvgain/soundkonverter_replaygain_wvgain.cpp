@@ -93,10 +93,10 @@ int soundkonverter_replaygain_wvgain::apply( const QList<QUrl>& fileList, Replay
     }
     for(const QUrl& file : fileList)
     {
-        command += "\"" + escapeUrl(file) + "\"";
+        command += escapeUrl(file);
     }
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 

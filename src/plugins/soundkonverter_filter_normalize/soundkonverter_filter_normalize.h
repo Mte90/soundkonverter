@@ -17,23 +17,23 @@ public:
     /** Default Destructor */
     ~soundkonverter_filter_normalize();
 
-    QString name() const;
+    QString name() const override;
 
-    QList<ConversionPipeTrunk> codecTable();
+    QList<ConversionPipeTrunk> codecTable() override;
 
-    bool isConfigSupported( ActionType action, const QString& codecName );
-    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent );
-    bool hasInfo();
-    void showInfo( QWidget *parent );
+    bool isConfigSupported( ActionType action, const QString& codecName ) override;
+    void showConfigDialog( ActionType action, const QString& codecName, QWidget *parent ) override;
+    bool hasInfo() override;
+    void showInfo( QWidget *parent ) override;
 
-    CodecWidget *newCodecWidget();
-    FilterWidget *newFilterWidget();
+    CodecWidget *newCodecWidget() override;
+    FilterWidget *newFilterWidget() override;
 
-    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false );
-    float parseOutput( const QString& output );
+    int convert( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false ) override;
+    QStringList convertCommand( const QUrl& inputFile, const QUrl& outputFile, const QString& inputCodec, const QString& outputCodec, const ConversionOptions *_conversionOptions, TagData *tags = 0, bool replayGain = false ) override;
+    float parseOutput( const QString& output ) override;
 
-    FilterOptions *filterOptionsFromXml( QDomElement filterOptions );
+    FilterOptions *filterOptionsFromXml( QDomElement filterOptions ) override;
 };
 
 #endif // SOUNDKONVERTER_FILTER_NORMALIZE_H

@@ -243,10 +243,10 @@ int soundkonverter_replaygain_aacgain::apply( const QList<QUrl>& fileList, Repla
     }
     for(const QUrl& file : fileList)
     {
-        command += "\"" + escapeUrl(file) + "\"";
+        command += escapeUrl(file);
     }
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -297,10 +297,10 @@ void soundkonverter_replaygain_aacgain::undoProcessExit( int exitCode, QProcess:
     command += "d";
     for(const QUrl& file : item->undoFileList)
     {
-        command += "\"" + escapeUrl(file) + "\"";
+        command += escapeUrl(file);
     }
 
-    item->process->startCommand(command.join(" "));
+    item->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( item->id, command.join(" ") );
 }

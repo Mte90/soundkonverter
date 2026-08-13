@@ -18,12 +18,12 @@ public:
     MusePackCodecWidget();
     ~MusePackCodecWidget();
 
-    ConversionOptions *currentConversionOptions();
-    bool setCurrentConversionOptions( const ConversionOptions *_options );
-    void setCurrentFormat( const QString& format );
-    QString currentProfile();
-    bool setCurrentProfile( const QString& profile );
-    int currentDataRate();
+    ConversionOptions *currentConversionOptions() override;
+    bool setCurrentConversionOptions( const ConversionOptions *_options ) override;
+    void setCurrentFormat( const QString& format ) override;
+    QString currentProfile() override;
+    bool setCurrentProfile( const QString& profile ) override;
+    int currentDataRate() override;
 
 private:
     // preset selection

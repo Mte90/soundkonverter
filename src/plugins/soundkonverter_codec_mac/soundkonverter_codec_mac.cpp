@@ -98,8 +98,8 @@ int soundkonverter_codec_mac::convert( const QUrl& inputFile, const QUrl& output
     if( outputCodec == "ape" )
     {
         command += binaries["mac"];
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
         if( conversionOptions->pluginName == global_plugin_name )
         {
             command += "-c"+QString::number((int)conversionOptions->compressionLevel);
@@ -108,8 +108,8 @@ int soundkonverter_codec_mac::convert( const QUrl& inputFile, const QUrl& output
     else
     {
         command += binaries["mac"];
-        command += "\"" + escapeUrl(inputFile) + "\"";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(inputFile);
+        command += escapeUrl(outputFile);
         command += "-d";
     }
 
@@ -123,7 +123,7 @@ int soundkonverter_codec_mac::convert( const QUrl& inputFile, const QUrl& output
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 

@@ -97,7 +97,7 @@ int soundkonverter_codec_wavpack::convert( const QUrl& inputFile, const QUrl& ou
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -146,16 +146,16 @@ QStringList soundkonverter_codec_wavpack::convertCommand( const QUrl& inputFile,
         {
             command += "--raw-pcm";
         }
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
     else
     {
         command += binaries["wvunpack"];
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
         command += "-o";
-        command += "\"" + escapeUrl(outputFile) + "\"";
+        command += escapeUrl(outputFile);
     }
 
     return command;

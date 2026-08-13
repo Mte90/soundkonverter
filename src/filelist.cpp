@@ -341,6 +341,7 @@ void FileList::addFiles( const QList<QUrl>& fileList, ConversionOptions *convers
     if( !filesPending )
     {
         filesPending = true;
+        QApplication::setOverrideCursor( Qt::WaitCursor );
         processNextBatch();
     }
 }
@@ -437,6 +438,7 @@ void FileList::processNextBatch()
     if( pendingGroups.isEmpty() )
     {
         filesPending = false;
+        QApplication::restoreOverrideCursor();
         if( !pScanStatus->isVisible() )
         {
             emit fileCountChanged( topLevelItemCount() );
@@ -471,6 +473,7 @@ void FileList::addDir( const QUrl& directory, bool recursive, const QStringList&
     if( !filesPending )
     {
         filesPending = true;
+        QApplication::setOverrideCursor( Qt::WaitCursor );
         processNextBatch();
     }
 }

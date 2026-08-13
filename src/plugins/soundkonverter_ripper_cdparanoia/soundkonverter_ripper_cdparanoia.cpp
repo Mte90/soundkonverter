@@ -253,7 +253,7 @@ int soundkonverter_ripper_cdparanoia::rip( const QString& device, int track, int
     {
         command += "1-" + QString::number(tracks);
     }
-    command += "\"" + outputFile.toLocalFile() + "\"";
+    command += escapeUrl(outputFile);
 
     RipperPluginItem *newItem = new RipperPluginItem( this );
     newItem->id = lastId++;
@@ -262,7 +262,7 @@ int soundkonverter_ripper_cdparanoia::rip( const QString& device, int track, int
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 

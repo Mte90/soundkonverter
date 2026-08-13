@@ -616,7 +616,7 @@ QString BackendPlugin::standardMessage(const QString& type, const QString& argum
     return standardMessage( type, arguments );
 }
 
-/// see http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_03_03.html
+/// POSIX single-quote quoting: safe for any character (spaces, quotes, &, ;, |, $, backticks, ...)
 QString BackendPlugin::escapeUrl( const QUrl& url )
 {
     // if no file name is given, assume we are using pipes
@@ -624,7 +624,7 @@ QString BackendPlugin::escapeUrl( const QUrl& url )
     if( !url.isLocalFile() || url.toLocalFile().isEmpty() )
         return "-";
 
-    return url.toLocalFile().replace(" ","\\ ").replace("(","\\(").replace(")","\\)").replace("\"","\\\"").replace("$","\\$").replace("`","\\`");
+    return "'" + url.toLocalFile().replace("'", "'\\''") + "'";
 }
 
 void BackendPlugin::logOutput( int id, const QString& message )

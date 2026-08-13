@@ -139,7 +139,7 @@ int soundkonverter_codec_mplayer::convert( const QUrl& inputFile, const QUrl& ou
     connect( newItem->process, SIGNAL(readyRead()), this, SLOT(processOutput()) );
     connect( newItem->process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processExit(int,QProcess::ExitStatus)) );
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
@@ -163,12 +163,12 @@ QStringList soundkonverter_codec_mplayer::convertCommand( const QUrl& inputFile,
     {
         command += binaries["mplayer"];
         command += "-ao";
-        command += "pcm:file=\"" + escapeUrl(outputFile) + "\"";
+        command += "pcm:file=" + escapeUrl(outputFile);
         command += "-vc";
         command += "null";
         command += "-vo";
         command += "null";
-        command += "\"" + escapeUrl(inputFile) + "\"";
+        command += escapeUrl(inputFile);
     }
 
     return command;

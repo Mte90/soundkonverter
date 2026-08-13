@@ -86,10 +86,10 @@ int soundkonverter_replaygain_musepackgain::apply( const QList<QUrl>& fileList, 
     command += binaries["mpcgain"];
     for(const QUrl& file : fileList)
     {
-        command += "\"" + escapeUrl(file) + "\"";
+        command += escapeUrl(file);
     }
 
-    newItem->process->startCommand(command.join(" "));
+    newItem->process->start(QStringLiteral("/bin/sh"), QStringList{QStringLiteral("-c"), command.join(" ")});
 
     logCommand( newItem->id, command.join(" ") );
 
